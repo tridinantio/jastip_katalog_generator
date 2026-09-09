@@ -1,0 +1,8 @@
+interface:
+  display_name: "Flutter Expert Dev"
+  short_description: "Senior Flutter architecture and coding"
+  brand_color: "#02569B"
+  default_prompt: "Use $flutter-expert-dev to analyze this Flutter codebase and implement the change with clean architecture."
+
+policy:
+  allow_implicit_invocation: true
