@@ -81,7 +81,16 @@ class ExchangeRateCaches extends Table {
 
 @DriftDatabase(tables: [Trips, Products, GeneratedAssets, ExchangeRateCaches])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(driftDatabase(name: 'jastip_catalog'));
+  AppDatabase()
+    : super(
+        driftDatabase(
+          name: 'jastip_catalog',
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          ),
+        ),
+      );
 
   AppDatabase.forTesting(super.executor);
 

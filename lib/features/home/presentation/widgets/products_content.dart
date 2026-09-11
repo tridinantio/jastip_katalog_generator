@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/widgets/atelier_widgets.dart';
+
 import '../../../product/domain/repositories/product_repository.dart';
 import '../../../product/domain/services/image_services.dart';
 import '../../../product/domain/services/location_services.dart';
@@ -28,10 +30,10 @@ class ProductsContent extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-              child: Text(
-                'Semua produk',
-                style: Theme.of(context).textTheme.headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1),
+              child: AtelierHeading(
+                eyebrow: 'THE COLLECTION',
+                title: 'Semua produk',
+                subtitle: 'Temuan pilihan dari ${trip.name}.',
               ),
             ),
             BlocBuilder<ProductListCubit, ProductListState>(
@@ -98,61 +100,79 @@ class ProductsContent extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (state.products.isEmpty) {
-                    return Center(
-                      child: Text(
-                        state.filter.isDefault
-                            ? 'Produk tidak ditemukan.'
-                            : 'Tidak ada produk sesuai filter.',
-                      ),
+                    return AtelierEmptyState(
+                      icon: Icons.manage_search_rounded,
+                      title: state.filter.isDefault
+                          ? 'Produk tidak ditemukan.'
+                          : 'Tidak ada produk sesuai filter.',
+                      message: 'Coba kata kunci lain, ubah filter, atau tambahkan temuan baru dari halaman Trip.',
                     );
                   }
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    itemCount: state.products.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final product = state.products[index];
-                      return ProductTile(
-                        product: product,
-                        trip: trip,
-                        isDeleting: state.deletingProductId == product.id,
-                        onTap: () => Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => ProductDetailPage(
-                              productId: product.id,
-                              trip: trip,
-                              productRepository: context
-                                  .read<ProductRepository>(),
-                              exportService: context
-                                  .read<CatalogExportService>(),
-                              shoppingRepository: context
-                                  .read<ShoppingRepository>(),
-                              locationService: context
-                                  .read<ProductLocationService>(),
+                  return LayoutBuilder(
+                    builder: (context, constraints) => GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            constraints.maxWidth < 360 ||
+                                MediaQuery.textScalerOf(context).scale(14) > 21
+                            ? 1
+                            : constraints.maxWidth < 700
+                            ? 2
+                            : 3,
+                        mainAxisExtent:
+                            340 +
+                            (MediaQuery.textScalerOf(context).scale(14) - 14) *
+                                8,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
+                      ),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      itemCount: state.products.length,
+                      itemBuilder: (context, index) {
+                        final product = state.products[index];
+                        return ProductTile(
+                          gallery: true,
+                          product: product,
+                          trip: trip,
+                          isDeleting: state.deletingProductId == product.id,
+                          onTap: () => Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => ProductDetailPage(
+                                productId: product.id,
+                                trip: trip,
+                                productRepository: context
+                                    .read<ProductRepository>(),
+                                exportService: context
+                                    .read<CatalogExportService>(),
+                                shoppingRepository: context
+                                    .read<ShoppingRepository>(),
+                                locationService: context
+                                    .read<ProductLocationService>(),
+                              ),
                             ),
                           ),
-                        ),
-                        onEdit: () => Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => ProductFormPage(
-                              trip: trip,
-                              productId: product.id,
-                              productRepository: context
-                                  .read<ProductRepository>(),
-                              imagePicker: context.read<ProductImagePicker>(),
-                              locationService: context
-                                  .read<ProductLocationService>(),
+                          onEdit: () => Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => ProductFormPage(
+                                trip: trip,
+                                productId: product.id,
+                                productRepository: context
+                                    .read<ProductRepository>(),
+                                imagePicker: context.read<ProductImagePicker>(),
+                                locationService: context
+                                    .read<ProductLocationService>(),
+                              ),
                             ),
                           ),
-                        ),
-                        onDelete: () => confirmAndDeleteProduct(
-                          context,
-                          product.id,
-                          product.name,
-                        ),
-                        shoppingProgress: state.progressByProductId[product.id],
-                      );
-                    },
+                          onDelete: () => confirmAndDeleteProduct(
+                            context,
+                            product.id,
+                            product.name,
+                          ),
+                          shoppingProgress:
+                              state.progressByProductId[product.id],
+                        );
+                      },
+                    ),
                   );
                 },
               ),

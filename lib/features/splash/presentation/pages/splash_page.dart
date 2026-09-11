@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({
     required this.nextPage,
@@ -30,45 +33,76 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 82,
-              height: 82,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Icon(
-                Icons.shopping_bag_outlined,
-                size: 42,
-                color: theme.colorScheme.onPrimary,
-                semanticLabel: 'Jastip Katalog',
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppTheme.forest,
+    body: SafeArea(
+      child: Stack(
+        children: [
+          const Positioned(
+            right: -100,
+            top: -70,
+            child: JourneyGlobe(size: 360, color: Color(0xFF365E4B)),
+          ),
+          const Positioned(
+            left: -100,
+            bottom: -90,
+            child: JourneyGlobe(size: 280, color: Color(0xFF365E4B)),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 88,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: AppTheme.paper,
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    child: const Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 42,
+                      color: AppTheme.forest,
+                      semanticLabel: 'Jastip Katalog',
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    'Jastip Katalog',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall
+                        ?.copyWith(color: AppTheme.paper),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'TEMUAN JAUH. TITIPAN DEKAT.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      letterSpacing: 2.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFD8E5B7),
+                    ),
+                  ),
+                  const SizedBox(height: 36),
+                  Container(
+                    width: 32,
+                    height: 2,
+                    color: const Color(0xFFD8E5B7),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Siapkan katalog Anda',
+                    style: TextStyle(fontSize: 12, color: Color(0xFFB8CABB)),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 18),
-            Text(
-              'Jastip Katalog',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.6,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Siapkan katalog Anda',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

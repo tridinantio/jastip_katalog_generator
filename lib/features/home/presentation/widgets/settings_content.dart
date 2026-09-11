@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/formatters/app_formatters.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
 import '../../../backup/presentation/cubit/backup_restore_cubit.dart';
 import '../../../trip/domain/entities/trip.dart';
 import '../../../trip/presentation/cubit/active_trip_cubit.dart';
@@ -85,21 +86,12 @@ class _SettingsContentState extends State<SettingsContent> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               children: [
-                Text(
-                  'Pengaturan',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                  ),
+                const AtelierHeading(
+                  eyebrow: 'MAKE IT YOURS',
+                  title: 'Pengaturan',
+                  subtitle: 'Atur perjalanan, harga, dan ruang kerja Anda.',
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Atur trip dan cara aplikasi menghitung harga katalog.',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 _TripManagerCard(
                   state: state,
                   onCreate: () => _showCreateTrip(context, state),

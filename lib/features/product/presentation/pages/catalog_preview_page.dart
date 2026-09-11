@@ -6,6 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/formatters/app_formatters.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
 import '../../../trip/domain/entities/trip.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_location.dart';
@@ -119,8 +121,23 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
                   ? 420.0
                   : constraints.maxWidth - 40;
               return ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                padding: EdgeInsets.fromLTRB(
+                  constraints.maxWidth > 800
+                      ? (constraints.maxWidth - 760) / 2
+                      : 20,
+                  8,
+                  constraints.maxWidth > 800
+                      ? (constraints.maxWidth - 760) / 2
+                      : 20,
+                  28,
+                ),
                 children: [
+                  const AtelierHeading(
+                    eyebrow: 'READY TO SHARE',
+                    title: 'Pilihan istimewa.',
+                    subtitle: 'Katalog Anda, siap menemui pemilik barunya.',
+                  ),
+                  const SizedBox(height: 22),
                   Center(
                     child: SizedBox(
                       width: width,
@@ -217,8 +234,12 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
       if (boundary == null || boundary.size.width == 0) return null;
       final pixelRatio = 1080 / boundary.size.width;
       final image = await boundary.toImage(pixelRatio: pixelRatio);
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      return data?.buffer.asUint8List();
+      try {
+        final data = await image.toByteData(format: ui.ImageByteFormat.png);
+        return data?.buffer.asUint8List();
+      } finally {
+        image.dispose();
+      }
     } finally {
       if (mounted) setState(() => _capturing = false);
     }
@@ -564,99 +585,163 @@ class CatalogCard extends StatelessWidget {
     required this.backgroundColor,
     super.key,
   });
-
   final Product product;
   final Trip trip;
   final Color backgroundColor;
 
   @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: backgroundColor,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    trip.name.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.6,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      // A fixed editorial canvas keeps exports consistent at every screen size
+      // and independent of the device's accessibility text scale.
+      return FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 360,
+          height: 640,
+          child: MediaQuery.withNoTextScaling(
+            child: ColoredBox(
+              color: backgroundColor,
+              child: Padding(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 18,
+                          color: AppTheme.ink,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            trip.name.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Manrope',
+                              fontSize: 10,
+                              letterSpacing: 1.8,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.ink,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.forest,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Text(
+                            'OPEN PO',
+                            style: TextStyle(
+                              fontFamily: 'Manrope',
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF202123),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'OPEN PO',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
+                    const SizedBox(height: 18),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(90),
+                          topRight: Radius.circular(90),
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: Radius.circular(12),
+                        ),
+                        child: SizedBox.expand(
+                          child: ColoredBox(
+                            color: AppTheme.paper,
+                            child: Image.memory(
+                              product.imageBytes,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 18),
+                    Text(
+                      product.category.isEmpty
+                          ? 'THE TRAVEL COLLECTION'
+                          : product.category.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Manrope',
+                        fontSize: 9,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.rust,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Fraunces',
+                        fontSize: 28,
+                        height: 1.1,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -.7,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Divider(color: Color(0xFFBDBDAC)),
+                    const SizedBox(height: 12),
+                    Text(
+                      formatIdr(product.sellingPriceIdr),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Manrope',
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1.2,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    const Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Sudah termasuk jasa titip',
+                            style: TextStyle(
+                              fontFamily: 'Manrope',
+                              fontSize: 10,
+                              color: AppTheme.muted,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 18,
+                          color: AppTheme.rust,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              flex: 7,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: ColoredBox(
-                  color: Colors.white,
-                  child: SizedBox.expand(
-                    child: Image.memory(product.imageBytes, fit: BoxFit.cover),
-                  ),
-                ),
               ),
             ),
-            const SizedBox(height: 22),
-            Text(
-              product.name.toUpperCase(),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 26,
-                height: 1.05,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.8,
-                color: Color(0xFF202123),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              formatIdr(product.sellingPriceIdr),
-              style: const TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1.2,
-                color: Color(0xFF202123),
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Sudah termasuk jasa titip',
-              style: TextStyle(fontSize: 11, color: Color(0xFF555555)),
-            ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
 }

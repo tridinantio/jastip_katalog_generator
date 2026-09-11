@@ -87,7 +87,7 @@ class CatalogPreviewCubit extends Cubit<CatalogPreviewState> {
     await _performExport(
       pngBytes,
       () => _exportService.saveToGallery(pngBytes),
-      'Gambar katalog tersimpan di galeri.',
+      'Gambar katalog siap disimpan atau dibagikan.',
     );
   }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/buyer_data_cubit.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class BuyerDataContent extends StatelessWidget {
   const BuyerDataContent({super.key});
@@ -58,22 +60,64 @@ class _BuyerHeader extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        'Data Pembeli',
-        style: Theme.of(context).textTheme.headlineMedium
-            ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1),
+      const AtelierHeading(
+        eyebrow: 'PEOPLE & THEIR FINDS',
+        title: 'Data Pembeli',
+        subtitle: 'Setiap titipan, tercatat dengan baik.',
       ),
-      const SizedBox(height: 8),
-      Text(
-        '$buyerCount pembeli · $pendingItemCount item belum dibeli',
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      const SizedBox(height: 22),
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.sage,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$buyerCount',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const Text(
+                    'pembeli dalam trip',
+                    style: TextStyle(fontSize: 11, color: AppTheme.muted),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 55,
+              child: VerticalDivider(width: 32, color: Color(0xFFC4CEBB)),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$pendingItemCount',
+                    style: Theme.of(context).textTheme.headlineLarge
+                        ?.copyWith(color: AppTheme.rust),
+                  ),
+                  const Text(
+                    'item belum dibeli',
+                    style: TextStyle(fontSize: 11, color: AppTheme.muted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      const SizedBox(height: 8),
-      Text(
+      const SizedBox(height: 18),
+      const Text(
         'Buka nama pembeli untuk melihat status setiap titipan.',
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        style: TextStyle(fontSize: 12, color: AppTheme.muted),
       ),
+      const SizedBox(height: 4),
     ],
   );
 }
@@ -92,7 +136,12 @@ class _BuyerCard extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: scheme.secondaryContainer,
           foregroundColor: scheme.onSecondaryContainer,
-          child: const Icon(Icons.person_outline),
+          child: Text(
+            buyer.name.trim().isEmpty
+                ? '?'
+                : buyer.name.trim().characters.first.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
         ),
         title: Text(
           buyer.name,
@@ -176,31 +225,27 @@ class _BuyerItemTile extends StatelessWidget {
 
 class _EmptyBuyerData extends StatelessWidget {
   const _EmptyBuyerData();
-
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.people_outline, size: 48),
-          const SizedBox(height: 14),
-          Text(
-            'Belum ada data pembeli',
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+  Widget build(BuildContext context) => const CustomScrollView(
+    slivers: [
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+        sliver: SliverToBoxAdapter(
+          child: AtelierHeading(
+            eyebrow: 'PEOPLE & THEIR FINDS',
+            title: 'Data Pembeli',
+            subtitle: 'Setiap titipan, tercatat dengan baik.',
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Tambahkan pembeli dari Detail Produk untuk melihat titipannya di sini.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+        ),
       ),
-    ),
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: AtelierEmptyState(
+          icon: Icons.people_outline,
+          title: 'Belum ada data pembeli',
+          message: 'Tambahkan pembeli dari Detail Produk untuk melihat titipannya di sini.',
+        ),
+      ),
+    ],
   );
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/formatters/app_formatters.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
 import '../../../product/domain/repositories/product_repository.dart';
 import '../../../product/domain/services/image_services.dart';
 import '../../../product/domain/services/location_services.dart';
@@ -30,33 +32,12 @@ class HomeContent extends StatelessWidget {
             return CustomScrollView(
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                   sliver: SliverToBoxAdapter(
-                    child: _Header(trip: trip, state: tripState),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  sliver: SliverToBoxAdapter(
-                    child:
-                        BlocBuilder<ShoppingSummaryCubit, ShoppingSummaryState>(
-                          builder: (context, summaryState) {
-                            return _ShoppingSummaryCard(state: summaryState);
-                          },
-                        ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(
-                    child: FilledButton.icon(
-                      onPressed: trip.hasRate
-                          ? () => _openForm(context, trip)
-                          : null,
-                      icon: const Icon(Icons.add_photo_alternate_outlined),
-                      label: Text(
-                        trip.hasRate ? 'Tambah produk' : 'Menunggu kurs',
-                      ),
+                    child: _DashboardOverview(
+                      trip: trip,
+                      state: tripState,
+                      onAdd: () => _openForm(context, trip),
                     ),
                   ),
                 ),
@@ -65,12 +46,14 @@ class HomeContent extends StatelessWidget {
                   sliver: SliverToBoxAdapter(
                     child: Row(
                       children: [
-                        Text(
-                          'Produk terbaru',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                        Expanded(
+                          child: Text(
+                            'Produk terbaru',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 12),
                         Text('${productState.products.length} produk'),
                       ],
                     ),
@@ -170,88 +153,168 @@ class HomeContent extends StatelessWidget {
   }
 }
 
+class _DashboardOverview extends StatelessWidget {
+  const _DashboardOverview({
+    required this.trip,
+    required this.state,
+    required this.onAdd,
+  });
+  final Trip trip;
+  final ActiveTripState state;
+  final VoidCallback onAdd;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const AtelierHeading(
+        eyebrow: 'JASTIP / YOUR TRAVEL ATELIER',
+        title: 'Pergi. Temukan. Titip.',
+        subtitle: 'Temuan istimewa, dari perjalanan Anda.',
+      ),
+      const SizedBox(height: 24),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final summary = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              BlocBuilder<ShoppingSummaryCubit, ShoppingSummaryState>(
+                builder: (context, state) => _ShoppingSummaryCard(state: state),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: trip.hasRate ? onAdd : null,
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                label: Text(trip.hasRate ? 'Tambah produk' : 'Menunggu kurs'),
+              ),
+            ],
+          );
+          if (constraints.maxWidth >= 760) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: _Header(trip: trip, state: state),
+                ),
+                const SizedBox(width: 20),
+                Expanded(flex: 5, child: summary),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Header(trip: trip, state: state),
+              const SizedBox(height: 12),
+              summary,
+            ],
+          );
+        },
+      ),
+    ],
+  );
+}
+
 class _ShoppingSummaryCard extends StatelessWidget {
   const _ShoppingSummaryCard({required this.state});
-
   final ShoppingSummaryState state;
 
   @override
   Widget build(BuildContext context) {
     final summary = state.summary;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isLoading =
         state.status == ShoppingSummaryStatus.loading ||
         state.status == ShoppingSummaryStatus.initial;
-    final progressLabel = summary.isEmpty
-        ? 'Belum ada daftar belanja'
-        : '${summary.purchasedQuantity} dari ${summary.totalQuantity} pcs terbeli';
-
     return Card(
-      margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.assessment_outlined, color: colorScheme.primary),
+                const Icon(
+                  Icons.pie_chart_outline_rounded,
+                  size: 20,
+                  color: AppTheme.rust,
+                ),
                 const SizedBox(width: 8),
-                Text(
-                  'Rekap belanja',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Text(
+                    'Rekap belanja',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                const Spacer(),
                 if (isLoading)
                   const SizedBox.square(
                     dimension: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  Text(
-                    progressLabel,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryMetric(
-                    label: 'Modal estimasi',
-                    value: formatIdr(summary.estimatedCapitalIdr),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryMetric(
-                    label: 'Belanja aktual',
-                    value: formatIdr(summary.actualCapitalIdr),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryMetric(
-                    label: 'Keuntungan',
-                    value: formatIdr(summary.estimatedProfitIdr),
-                    valueColor: colorScheme.primary,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 20),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width =
+                    constraints.maxWidth < 270 ||
+                        MediaQuery.textScalerOf(context).scale(14) > 19
+                    ? constraints.maxWidth
+                    : (constraints.maxWidth - 24) / 3;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 16,
+                  children: [
+                    SizedBox(
+                      width: width,
+                      child: _SummaryMetric(
+                        label: 'Modal estimasi',
+                        value: formatIdr(summary.estimatedCapitalIdr),
+                      ),
+                    ),
+                    SizedBox(
+                      width: width,
+                      child: _SummaryMetric(
+                        label: 'Belanja aktual',
+                        value: formatIdr(summary.actualCapitalIdr),
+                      ),
+                    ),
+                    SizedBox(
+                      width: width,
+                      child: _SummaryMetric(
+                        label: 'Keuntungan',
+                        value: formatIdr(summary.estimatedProfitIdr),
+                        valueColor: AppTheme.rust,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                minHeight: 5,
+                value: summary.totalQuantity == 0
+                    ? 0
+                    : (summary.purchasedQuantity / summary.totalQuantity).clamp(
+                        0,
+                        1,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              summary.isEmpty
+                  ? 'Belum ada daftar belanja'
+                  : '${summary.purchasedQuantity} dari ${summary.totalQuantity} pcs terbeli',
+              style: const TextStyle(fontSize: 11, color: AppTheme.muted),
             ),
             if (summary.isEmpty && !isLoading) ...[
-              const SizedBox(height: 10),
-              Text(
+              const SizedBox(height: 5),
+              const Text(
                 'Tambahkan pembeli dari Detail Produk untuk mengisi rekap.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 11, color: AppTheme.muted),
               ),
             ],
             if (state.status == ShoppingSummaryStatus.failure &&
@@ -259,9 +322,7 @@ class _ShoppingSummaryCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 state.message!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
           ],
@@ -277,160 +338,244 @@ class _SummaryMetric extends StatelessWidget {
     required this.value,
     this.valueColor,
   });
-
   final String label;
   final String value;
   final Color? valueColor;
-
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+      const SizedBox(height: 6),
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -.6,
+          color: valueColor,
         ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: valueColor,
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 }
 
 class _Header extends StatelessWidget {
   const _Header({required this.trip, required this.state});
-
   final Trip trip;
   final ActiveTripState state;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Jastip',
-                style: Theme.of(context).textTheme.headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1),
-              ),
-            ),
-            Chip(
-              avatar: state.isRefreshingRate
-                  ? const SizedBox.square(
-                      dimension: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.currency_exchange, size: 16),
-              label: Text(trip.currencyCode),
-            ),
-          ],
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppTheme.forest,
+          borderRadius: BorderRadius.circular(26),
         ),
-        const SizedBox(height: 20),
-        PopupMenuButton<String>(
-          enabled: !state.isManagingTrips,
-          onSelected: context.read<ActiveTripCubit>().selectTrip,
-          itemBuilder: (_) => state.trips
-              .map(
-                (item) => PopupMenuItem(
-                  value: item.id,
-                  child: Row(
+        child: Stack(
+          children: [
+            const Positioned(
+              right: -28,
+              top: -28,
+              child: JourneyGlobe(size: 190, color: Color(0xFF3D6050)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Icon(
-                        item.id == trip.id
-                            ? Icons.check_circle
-                            : Icons.circle_outlined,
+                      const Icon(
+                        Icons.flight_takeoff_rounded,
+                        color: Color(0xFFD8E5B7),
                         size: 18,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'TRIP AKTIF',
+                          style: TextStyle(
+                            color: Color(0xFFD8E5B7),
+                            fontSize: 10,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (state.isRefreshingRate)
+                        const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  PopupMenuButton<String>(
+                    tooltip: 'Ganti trip',
+                    enabled: !state.isManagingTrips,
+                    onSelected: context.read<ActiveTripCubit>().selectTrip,
+                    itemBuilder: (_) => state.trips
+                        .map(
+                          (item) => PopupMenuItem(
+                            value: item.id,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  item.id == trip.id
+                                      ? Icons.check_circle
+                                      : Icons.circle_outlined,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    item.name,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              trip.name,
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFF648174),
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.expand_more,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const TicketDivider(),
+                  const SizedBox(height: 18),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Expanded(
-                        child: Text(item.name, overflow: TextOverflow.ellipsis),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'MATA UANG',
+                              style: TextStyle(
+                                color: Color(0xFFB8CABB),
+                                fontSize: 9,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              trip.currencyCode,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 16,
+                        ),
+                        child: Icon(
+                          Icons.east_rounded,
+                          size: 20,
+                          color: Color(0xFFD8E5B7),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              'KURS KE RUPIAH',
+                              style: TextStyle(
+                                color: Color(0xFFB8CABB),
+                                fontSize: 9,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              trip.hasRate
+                                  ? 'Rp${formatRate(trip.rateMicros)}'
+                                  : 'Mengambil kurs…',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-              )
-              .toList(growable: false),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  trip.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
+                  const SizedBox(height: 10),
+                  Text(
+                    trip.hasRate
+                        ? 'Per 1 ${trip.currencyCode}${trip.rateDate == null ? '' : ' · ${formatShortDate(trip.rateDate!)}'}'
+                        : state.message ?? 'Menunggu kurs terbaru',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFFCFDACF),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.keyboard_arrow_down),
-            ],
-          ),
-        ),
-        const SizedBox(height: 6),
-        if (trip.hasRate)
-          Text(
-            '1 ${trip.currencyCode} = Rp${formatRate(trip.rateMicros)}'
-            '${trip.rateDate == null ? '' : ' · ${formatShortDate(trip.rateDate!)}'}',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-          )
-        else
-          Text(
-            state.message ?? 'Mengambil kurs terbaru…',
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-        const SizedBox(height: 22),
-      ],
-    );
-  }
+          ],
+        ),
+      ),
+      const SizedBox(height: 4),
+    ],
+  );
 }
 
 class _EmptyProducts extends StatelessWidget {
   const _EmptyProducts({required this.hasRate});
-
   final bool hasRate;
-
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.shopping_bag_outlined, size: 44),
-          const SizedBox(height: 14),
-          Text(
-            hasRate ? 'Belum ada produk' : 'Kurs belum tersedia',
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            hasRate
-                ? 'Foto produk pertama Anda dan buat katalog dalam beberapa langkah.'
-                : 'Buka Pengaturan untuk memilih mata uang dan mencoba lagi.',
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AtelierEmptyState(
+    icon: Icons.shopping_bag_outlined,
+    title: hasRate ? 'Belum ada produk' : 'Kurs belum tersedia',
+    message: hasRate
+        ? 'Setiap perjalanan punya temuan istimewa. Foto produk pertama Anda dan mulai koleksinya.'
+        : 'Buka Pengaturan untuk memilih mata uang dan mencoba lagi.',
+  );
 }

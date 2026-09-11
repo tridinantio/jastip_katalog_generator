@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/formatters/app_formatters.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/presentation/cubit/product_list_cubit.dart';
 import '../../../shopping/domain/entities/shopping_request.dart';
@@ -16,6 +17,7 @@ class ProductTile extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     this.shoppingProgress,
+    this.gallery = false,
     super.key,
   });
 
@@ -26,23 +28,25 @@ class ProductTile extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final ShoppingProgress? shoppingProgress;
+  final bool gallery;
 
   @override
   Widget build(BuildContext context) {
+    if (gallery) return _buildGallery(context);
     return Card(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 child: Image.memory(
                   product.thumbnailBytes,
-                  width: 72,
-                  height: 72,
+                  width: 88,
+                  height: 108,
                   fit: BoxFit.cover,
                   cacheWidth: 180,
                   errorBuilder: (_, _, _) => const SizedBox.square(
@@ -59,11 +63,28 @@ class ProductTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (product.category.isNotEmpty) ...[
+                      Text(
+                        product.category.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          letterSpacing: 1.2,
+                          color: AppTheme.rust,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                    ],
                     Text(
                       product.name,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                     ),
                     const SizedBox(height: 5),
                     Text(
@@ -79,7 +100,11 @@ class ProductTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       formatIdr(product.sellingPriceIdr),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.forest,
+                        fontSize: 16,
+                      ),
                     ),
                     if (shoppingProgress != null) ...[
                       const SizedBox(height: 6),
@@ -132,6 +157,133 @@ class ProductTile extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildGallery(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.memory(
+                  product.thumbnailBytes,
+                  fit: BoxFit.cover,
+                  cacheWidth: 480,
+                  errorBuilder: (_, _, _) => const ColoredBox(
+                    color: AppTheme.cream,
+                    child: Icon(
+                      Icons.image_outlined,
+                      color: AppTheme.muted,
+                      size: 36,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: AppTheme.paper,
+                    shape: const CircleBorder(),
+                    child: isDeleting
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : PopupMenuButton<String>(
+                            tooltip: 'Menu produk',
+                            icon: const Icon(Icons.more_horiz, size: 20),
+                            onSelected: (value) {
+                              if (value == 'edit') onEdit();
+                              if (value == 'delete') onDelete();
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Text('Edit produk'),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Hapus produk'),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.category.isEmpty
+                      ? 'KOLEKSI TRIP'
+                      : product.category.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    letterSpacing: 1.3,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.rust,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: MediaQuery.textScalerOf(context).scale(14) * 2.8,
+                  child: Text(
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  formatIdr(product.sellingPriceIdr),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  formatForeignMinor(
+                    product.originalPriceMinor,
+                    trip.currencySymbol,
+                    trip.currencyCode,
+                  ),
+                  style: const TextStyle(fontSize: 11, color: AppTheme.muted),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: MediaQuery.textScalerOf(context).scale(12) * 1.6,
+                  child: shoppingProgress == null
+                      ? null
+                      : _ShoppingProgressLabel(progress: shoppingProgress!),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ShoppingProgressLabel extends StatelessWidget {
@@ -154,12 +306,14 @@ class _ShoppingProgressLabel extends StatelessWidget {
           color: color,
         ),
         const SizedBox(width: 4),
-        Text(
-          'Checklist ${progress.purchasedRequests}/${progress.totalRequests}',
-          style: TextStyle(
-            color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          child: Text(
+            'Checklist ${progress.purchasedRequests}/${progress.totalRequests}',
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

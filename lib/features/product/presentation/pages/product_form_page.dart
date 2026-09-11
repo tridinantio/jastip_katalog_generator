@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/formatters/app_formatters.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
 import '../../../trip/domain/entities/trip.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/services/image_services.dart';
@@ -85,8 +87,23 @@ class _ProductFormView extends StatelessWidget {
             }
             final cubit = context.read<ProductFormCubit>();
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: EdgeInsets.fromLTRB(
+                MediaQuery.sizeOf(context).width > 800
+                    ? (MediaQuery.sizeOf(context).width - 760) / 2
+                    : 20,
+                8,
+                MediaQuery.sizeOf(context).width > 800
+                    ? (MediaQuery.sizeOf(context).width - 760) / 2
+                    : 20,
+                32,
+              ),
               children: [
+                const AtelierHeading(
+                  eyebrow: 'CURATE A NEW FIND',
+                  title: 'Temuan jadi titipan.',
+                  subtitle: 'Dari foto produk menjadi katalog siap dibagikan.',
+                ),
+                const SizedBox(height: 28),
                 const _PromptTitle(
                   number: '01',
                   title: 'Foto produknya',
@@ -390,7 +407,7 @@ class _LocationCaptureCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: location == null
@@ -458,11 +475,11 @@ class _ImagePickerCard extends StatelessWidget {
     final image = state.originalImageBytes;
     final loading = state.status == ProductFormStatus.pickingImage;
     return Container(
-      height: image == null ? 184 : 260,
+      height: image == null ? 224 : 300,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: image == null
@@ -472,7 +489,16 @@ class _ImagePickerCard extends StatelessWidget {
                 if (loading)
                   const CircularProgressIndicator()
                 else ...[
-                  const Icon(Icons.add_photo_alternate_outlined, size: 38),
+                  const Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 38,
+                    color: AppTheme.forest,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Satu foto, awal sebuah koleksi.',
+                    style: TextStyle(color: AppTheme.muted, fontSize: 12),
+                  ),
                   const SizedBox(height: 14),
                   Wrap(
                     spacing: 8,
@@ -564,7 +590,7 @@ class _PromptTitle extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFE9E9E5),
+            color: AppTheme.sage,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(number, style: Theme.of(context).textTheme.labelSmall),
@@ -607,8 +633,8 @@ class _PricePreview extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF5F1),
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.sage,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
