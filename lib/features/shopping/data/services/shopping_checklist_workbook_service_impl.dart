@@ -81,7 +81,7 @@ class ShoppingChecklistWorkbookServiceImpl
       if (productId.isEmpty) continue;
       final originalStatus = _cellText(syncSheet, row, 1);
       final originalValue = _statusValue(originalStatus);
-      final currentValue = _checklistValue(_cellText(listSheet, row, 0));
+      final currentValue = _checklistValue(_cellText(listSheet, row, 3));
       if (currentValue == null || currentValue == originalValue) continue;
       updates.add(
         ShoppingChecklistUpdate(
@@ -105,7 +105,7 @@ class ShoppingChecklistWorkbookServiceImpl
         'Pilih status pada kolom Checklist untuk memperbarui belanja.',
       ),
     );
-    const headers = ['Checklist', 'Foto', 'Produk', 'Jumlah'];
+    const headers = ['Foto', 'Produk', 'Jumlah', 'Checklist'];
     for (var column = 0; column < headers.length; column++) {
       _put(
         sheet,
@@ -120,20 +120,20 @@ class ShoppingChecklistWorkbookServiceImpl
       final row = _firstItemRow + index;
       _put(
         sheet,
-        0,
+        3,
         row,
         TextCellValue(item.isPurchased ? 'Terbeli' : 'Belum dibeli'),
       );
-      _put(sheet, 2, row, TextCellValue(item.name));
-      _put(sheet, 3, row, IntCellValue(item.quantity));
+      _put(sheet, 1, row, TextCellValue(item.name));
+      _put(sheet, 2, row, IntCellValue(item.quantity));
       _addThumbnail(sheet, item.thumbnailBytes, row);
       sheet.setRowHeight(row, 52);
     }
     sheet.frozenRows = _firstItemRow;
-    sheet.setColumnWidth(0, 15);
-    sheet.setColumnWidth(1, 12);
-    sheet.setColumnWidth(2, 36);
-    sheet.setColumnWidth(3, 12);
+    sheet.setColumnWidth(0, 12);
+    sheet.setColumnWidth(1, 36);
+    sheet.setColumnWidth(2, 12);
+    sheet.setColumnWidth(3, 18);
   }
 
   void _writeSyncSheet(Sheet sheet, ShoppingChecklist checklist) {
@@ -260,7 +260,7 @@ class ShoppingChecklistWorkbookServiceImpl
             XmlAttribute(XmlName.parts('showErrorMessage'), '1'),
             XmlAttribute(
               XmlName.parts('sqref'),
-              'A6:A${_firstItemRow + itemCount}',
+              'D6:D${_firstItemRow + itemCount}',
             ),
             XmlAttribute(XmlName.parts('promptTitle'), 'Checklist'),
             XmlAttribute(

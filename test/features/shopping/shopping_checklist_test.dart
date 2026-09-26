@@ -63,12 +63,12 @@ void main() {
     await service.export(checklist);
     final workbook = Excel.decodeBytes(sharer.bytes!);
     workbook['Daftar Belanja']
-        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 5))
+        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 5))
         .value = TextCellValue(
       'Terbeli',
     );
     workbook['Daftar Belanja']
-        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 6))
+        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 6))
         .value = TextCellValue(
       'Belum dibeli',
     );
@@ -108,7 +108,7 @@ void main() {
         .readBytes()!;
     final xml = String.fromCharCodes(worksheet);
     expect(xml, contains('<dataValidations count="1">'));
-    expect(xml, contains('sqref="A6:A6"'));
+    expect(xml, contains('sqref="D6:D6"'));
     expect(xml, contains('"Belum dibeli,Terbeli"'));
   });
 
