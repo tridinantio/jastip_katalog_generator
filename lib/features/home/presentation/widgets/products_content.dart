@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/atelier_widgets.dart';
 
 import '../../../product/domain/repositories/product_repository.dart';
@@ -11,6 +12,7 @@ import '../../../product/presentation/pages/catalog_preview_page.dart';
 import '../../../product/presentation/widgets/product_filter_sheet.dart';
 import '../../../trip/presentation/cubit/active_trip_cubit.dart';
 import '../../../shopping/domain/repositories/shopping_repository.dart';
+import 'product_category_groups.dart';
 import 'product_tile.dart';
 
 class ProductsContent extends StatelessWidget {
@@ -107,52 +109,83 @@ class ProductsContent extends StatelessWidget {
                       message: 'Coba kata kunci lain, ubah filter, atau tambahkan temuan baru dari halaman Trip.',
                     );
                   }
+                  final groups = groupProductsByCategory(state.products);
                   return LayoutBuilder(
-                    builder: (context, constraints) => GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount:
-                            constraints.maxWidth < 360 ||
-                                MediaQuery.textScalerOf(context).scale(14) > 21
-                            ? 1
-                            : constraints.maxWidth < 700
-                            ? 2
-                            : 3,
-                        mainAxisExtent:
-                            340 +
-                            (MediaQuery.textScalerOf(context).scale(14) - 14) *
-                                8,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                      ),
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                      itemCount: state.products.length,
-                      itemBuilder: (context, index) {
-                        final product = state.products[index];
-                        return ProductTile(
-                          gallery: true,
-                          product: product,
-                          trip: trip,
-                          onTap: () => Navigator.of(context).push<void>(
-                            MaterialPageRoute(
-                              builder: (_) => ProductDetailPage(
-                                productId: product.id,
-                                trip: trip,
-                                productRepository: context
-                                    .read<ProductRepository>(),
-                                exportService: context
-                                    .read<CatalogExportService>(),
-                                shoppingRepository: context
-                                    .read<ShoppingRepository>(),
-                                locationService: context
-                                    .read<ProductLocationService>(),
+                    builder: (context, constraints) {
+                      final textScale = MediaQuery.textScalerOf(context)
+                          .scale(14);
+                      final gridDelegate =
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                constraints.maxWidth < 360 || textScale > 21
+                                ? 1
+                                : constraints.maxWidth < 700
+                                ? 2
+                                : 3,
+                            mainAxisExtent: 340 + (textScale - 14) * 8,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
+                          );
+                      return CustomScrollView(
+                        key: const PageStorageKey('products-category-list'),
+                        slivers: [
+                          for (final group in groups) ...[
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                20,
+                                group == groups.first ? 0 : 28,
+                                20,
+                                10,
+                              ),
+                              sliver: SliverToBoxAdapter(
+                                child: _CategorySectionHeader(group: group),
                               ),
                             ),
-                          ),
-                          shoppingProgress:
-                              state.progressByProductId[product.id],
-                        );
-                      },
-                    ),
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              sliver: SliverGrid(
+                                gridDelegate: gridDelegate,
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  final product = group.products[index];
+                                  return ProductTile(
+                                    gallery: true,
+                                    product: product,
+                                    trip: trip,
+                                    onTap: () => Navigator.of(context)
+                                        .push<void>(
+                                          MaterialPageRoute(
+                                            builder: (_) => ProductDetailPage(
+                                              productId: product.id,
+                                              trip: trip,
+                                              productRepository: context
+                                                  .read<ProductRepository>(),
+                                              exportService: context
+                                                  .read<CatalogExportService>(),
+                                              shoppingRepository: context
+                                                  .read<ShoppingRepository>(),
+                                              locationService: context
+                                                  .read<
+                                                    ProductLocationService
+                                                  >(),
+                                            ),
+                                          ),
+                                        ),
+                                    shoppingProgress:
+                                        state.progressByProductId[product.id],
+                                  );
+                                }, childCount: group.products.length),
+                              ),
+                            ),
+                          ],
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -179,4 +212,33 @@ class ProductsContent extends StatelessWidget {
     if (!context.mounted || filter == null) return;
     context.read<ProductListCubit>().setFilter(filter);
   }
+}
+
+class _CategorySectionHeader extends StatelessWidget {
+  const _CategorySectionHeader({required this.group});
+
+  final ProductCategoryGroup group;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          group.label.toUpperCase(),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: group.isUncategorized
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : AppTheme.forest,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.1,
+          ),
+        ),
+      ),
+      Text(
+        '${group.products.length} produk',
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+    ],
+  );
 }

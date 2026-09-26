@@ -95,7 +95,7 @@ void main() {
           180,
           scrollable: find
               .descendant(
-                of: find.byType(GridView),
+                of: find.byKey(const PageStorageKey('products-category-list')),
                 matching: find.byType(Scrollable),
               )
               .first,
