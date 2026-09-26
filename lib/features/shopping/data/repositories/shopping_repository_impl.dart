@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../domain/entities/shopping_request.dart';
 import '../../domain/repositories/shopping_repository.dart';
 import '../data_sources/shopping_local_data_source.dart';
@@ -6,6 +8,7 @@ class ShoppingRepositoryImpl implements ShoppingRepository {
   const ShoppingRepositoryImpl(this._localDataSource);
 
   final ShoppingLocalDataSource _localDataSource;
+  static final _random = Random.secure();
 
   @override
   Stream<List<ShoppingRequest>> watchRequests(String productId) =>
@@ -49,7 +52,7 @@ class ShoppingRepositoryImpl implements ShoppingRepository {
   @override
   Future<String> addRequest(NewShoppingRequest request) async {
     final now = DateTime.now();
-    final id = now.microsecondsSinceEpoch.toString();
+    final id = '${now.microsecondsSinceEpoch}_${_random.nextInt(1 << 32)}';
     await _localDataSource.insertRequest(
       id: id,
       tripId: request.tripId,
@@ -71,6 +74,21 @@ class ShoppingRepositoryImpl implements ShoppingRepository {
       isPurchased ? DateTime.now() : null,
     );
     if (updated == 0) throw StateError('Permintaan pembelian tidak ditemukan.');
+  }
+
+  @override
+  Future<void> setPurchasedForProduct(
+    String tripId,
+    String productId,
+    bool isPurchased,
+  ) async {
+    final updated = await _localDataSource.updatePurchaseStatusForProduct(
+      tripId,
+      productId,
+      isPurchased,
+      isPurchased ? DateTime.now() : null,
+    );
+    if (updated == 0) throw StateError('Produk belanja tidak ditemukan.');
   }
 
   @override

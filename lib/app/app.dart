@@ -24,6 +24,9 @@ class JastipApp extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.catalogExportService),
         RepositoryProvider.value(value: dependencies.tripExportService),
         RepositoryProvider.value(value: dependencies.shoppingRepository),
+        RepositoryProvider.value(
+          value: dependencies.shoppingChecklistWorkbookService,
+        ),
         RepositoryProvider.value(value: dependencies.backupRestoreService),
       ],
       child: MaterialApp(

@@ -124,6 +124,28 @@ class ShoppingLocalDataSource {
     return updated;
   }
 
+  Future<int> updatePurchaseStatusForProduct(
+    String tripId,
+    String productId,
+    bool isPurchased,
+    DateTime? purchasedAt,
+  ) async {
+    final updated = await _database.customUpdate(
+      '''UPDATE shopping_requests
+      SET is_purchased = ?, purchased_at = ?, updated_at = ?
+      WHERE trip_id = ? AND product_id = ?''',
+      variables: [
+        Variable<int>(isPurchased ? 1 : 0),
+        Variable<String>(purchasedAt?.toIso8601String() ?? ''),
+        Variable<String>(DateTime.now().toIso8601String()),
+        Variable<String>(tripId),
+        Variable<String>(productId),
+      ],
+    );
+    if (updated > 0) _changes.add(null);
+    return updated;
+  }
+
   Future<int> deleteRequest(String requestId) => _deleteRequest(requestId);
 
   Future<int> _deleteRequest(String requestId) async {

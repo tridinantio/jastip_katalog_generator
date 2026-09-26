@@ -72,4 +72,30 @@ void main() {
       expect(await repository.getBuyerNames('trip-1'), ['Rina']);
     },
   );
+
+  test('memperbarui checklist seluruh pesanan produk sekaligus', () async {
+    await repository.addRequest(
+      const NewShoppingRequest(
+        tripId: 'trip-1',
+        productId: 'product-1',
+        buyerName: 'Rina',
+        quantity: 1,
+        note: '',
+      ),
+    );
+    await repository.addRequest(
+      const NewShoppingRequest(
+        tripId: 'trip-1',
+        productId: 'product-1',
+        buyerName: 'Dina',
+        quantity: 2,
+        note: '',
+      ),
+    );
+
+    await repository.setPurchasedForProduct('trip-1', 'product-1', true);
+
+    final requests = await repository.watchRequests('product-1').first;
+    expect(requests.every((request) => request.isPurchased), isTrue);
+  });
 }

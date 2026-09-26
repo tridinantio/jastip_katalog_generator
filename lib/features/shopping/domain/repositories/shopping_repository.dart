@@ -7,5 +7,10 @@ abstract interface class ShoppingRepository {
   Future<List<String>> getBuyerNames(String tripId);
   Future<String> addRequest(NewShoppingRequest request);
   Future<void> setPurchased(String requestId, bool isPurchased);
+  Future<void> setPurchasedForProduct(
+    String tripId,
+    String productId,
+    bool isPurchased,
+  );
   Future<void> deleteRequest(String requestId);
 }

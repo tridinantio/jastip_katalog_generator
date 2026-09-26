@@ -133,5 +133,12 @@ class _FakeShoppingRepository implements ShoppingRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> setPurchasedForProduct(
+    String tripId,
+    String productId,
+    bool isPurchased,
+  ) => throw UnimplementedError();
+
+  @override
   Future<void> deleteRequest(String requestId) => throw UnimplementedError();
 }

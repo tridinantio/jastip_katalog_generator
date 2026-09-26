@@ -10,6 +10,9 @@ import '../../../product/domain/services/location_services.dart';
 import '../../../product/presentation/cubit/product_list_cubit.dart';
 import '../../../product/presentation/pages/catalog_preview_page.dart';
 import '../../../shopping/domain/repositories/shopping_repository.dart';
+import '../../../shopping/domain/entities/shopping_checklist.dart';
+import '../../../shopping/domain/services/shopping_checklist_workbook_service.dart';
+import '../../../shopping/domain/use_cases/build_shopping_checklist.dart';
 import '../../../shopping/presentation/cubit/shopping_summary_cubit.dart';
 import '../../../product/presentation/pages/product_form_page.dart';
 import '../../../trip/domain/entities/trip.dart';
@@ -151,7 +154,8 @@ class _DashboardOverview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BlocBuilder<ShoppingSummaryCubit, ShoppingSummaryState>(
-                builder: (context, state) => _ShoppingSummaryCard(state: state),
+                builder: (context, state) =>
+                    _ShoppingSummaryCard(trip: trip, state: state),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
@@ -188,12 +192,22 @@ class _DashboardOverview extends StatelessWidget {
   );
 }
 
-class _ShoppingSummaryCard extends StatelessWidget {
-  const _ShoppingSummaryCard({required this.state});
+class _ShoppingSummaryCard extends StatefulWidget {
+  const _ShoppingSummaryCard({required this.trip, required this.state});
+
+  final Trip trip;
   final ShoppingSummaryState state;
 
   @override
+  State<_ShoppingSummaryCard> createState() => _ShoppingSummaryCardState();
+}
+
+class _ShoppingSummaryCardState extends State<_ShoppingSummaryCard> {
+  bool _isProcessing = false;
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
     final summary = state.summary;
     final isLoading =
         state.status == ShoppingSummaryStatus.loading ||
@@ -302,6 +316,46 @@ class _ShoppingSummaryCard extends StatelessWidget {
                 style: TextStyle(fontSize: 11, color: AppTheme.muted),
               ),
             ],
+            if (!summary.isEmpty) ...[
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 330;
+                  final exportButton = FilledButton.tonalIcon(
+                    onPressed: _isProcessing ? null : _exportChecklist,
+                    icon: _isProcessing
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.table_view_outlined),
+                    label: const Text('Ekspor Excel'),
+                  );
+                  final importButton = OutlinedButton.icon(
+                    onPressed: _isProcessing ? null : _importChecklist,
+                    icon: const Icon(Icons.file_upload_outlined),
+                    label: const Text('Impor checklist'),
+                  );
+                  if (compact) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        exportButton,
+                        const SizedBox(height: 8),
+                        importButton,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: exportButton),
+                      const SizedBox(width: 8),
+                      Expanded(child: importButton),
+                    ],
+                  );
+                },
+              ),
+            ],
             if (state.status == ShoppingSummaryStatus.failure &&
                 state.message != null) ...[
               const SizedBox(height: 10),
@@ -314,6 +368,87 @@ class _ShoppingSummaryCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportChecklist() async {
+    await _runChecklistAction(
+      (service, checklist) => service.export(checklist),
+    );
+  }
+
+  Future<void> _importChecklist() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    try {
+      final result = await context
+          .read<ShoppingChecklistWorkbookService>()
+          .importChecklist(widget.trip.id);
+      if (!mounted || result.wasCancelled) return;
+      final repository = context.read<ShoppingRepository>();
+      for (final update in result.updates) {
+        await repository.setPurchasedForProduct(
+          widget.trip.id,
+          update.productId,
+          update.isPurchased,
+        );
+      }
+      if (!mounted) return;
+      final message = result.updates.isEmpty
+          ? 'Tidak ada perubahan checklist untuk diperbarui.'
+          : '${result.updates.length} checklist berhasil diperbarui.';
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    } on FormatException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Checklist gagal diimpor: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _runChecklistAction(
+    Future<void> Function(
+      ShoppingChecklistWorkbookService service,
+      ShoppingChecklist checklist,
+    )
+    action,
+  ) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    final trip = widget.trip;
+    final productRepository = context.read<ProductRepository>();
+    final shoppingRepository = context.read<ShoppingRepository>();
+    final workbookService = context.read<ShoppingChecklistWorkbookService>();
+    try {
+      final products = await productRepository.watchProducts(trip.id).first;
+      final requests = await shoppingRepository
+          .watchRequestsForTrip(trip.id)
+          .first;
+      final checklist = BuildShoppingChecklist.call(
+        tripId: trip.id,
+        tripName: trip.name,
+        products: products,
+        requests: requests,
+      );
+      if (checklist.isEmpty) return;
+      await action(workbookService, checklist);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Daftar belanja gagal diekspor: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
   }
 }
 

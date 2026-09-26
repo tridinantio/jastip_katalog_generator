@@ -22,7 +22,9 @@ import '../features/trip/domain/repositories/trip_repository.dart';
 import '../features/trip/domain/services/trip_export_service.dart';
 import '../features/shopping/data/data_sources/shopping_local_data_source.dart';
 import '../features/shopping/data/repositories/shopping_repository_impl.dart';
+import '../features/shopping/data/services/shopping_checklist_workbook_service_impl.dart';
 import '../features/shopping/domain/repositories/shopping_repository.dart';
+import '../features/shopping/domain/services/shopping_checklist_workbook_service.dart';
 
 class AppDependencies {
   const AppDependencies({
@@ -35,6 +37,7 @@ class AppDependencies {
     required this.catalogExportService,
     required this.tripExportService,
     required this.shoppingRepository,
+    required this.shoppingChecklistWorkbookService,
     required this.backupRestoreService,
   });
 
@@ -60,6 +63,10 @@ class AppDependencies {
         const SharePlusTripExportFileSharer(),
       ),
       shoppingRepository: ShoppingRepositoryImpl(shoppingLocal),
+      shoppingChecklistWorkbookService:
+          const ShoppingChecklistWorkbookServiceImpl(
+            SharePlusShoppingChecklistFileSharer(),
+          ),
       backupRestoreService: BackupRestoreServiceImpl(
         database,
         const SharePlusBackupFileSharer(),
@@ -76,5 +83,6 @@ class AppDependencies {
   final CatalogExportService catalogExportService;
   final TripExportService tripExportService;
   final ShoppingRepository shoppingRepository;
+  final ShoppingChecklistWorkbookService shoppingChecklistWorkbookService;
   final BackupRestoreService backupRestoreService;
 }
