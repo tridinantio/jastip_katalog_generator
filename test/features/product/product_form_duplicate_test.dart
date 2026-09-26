@@ -73,6 +73,12 @@ class _FakeProductImagePicker implements ProductImagePicker {
   @override
   Future<PickedProductImage?> pick(ImagePickSource source) =>
       throw UnimplementedError();
+
+  @override
+  Future<PickedProductImage> prepare(
+    Uint8List originalBytes, {
+    required String mimeType,
+  }) => throw UnimplementedError();
 }
 
 class _FakeLocationService implements ProductLocationService {

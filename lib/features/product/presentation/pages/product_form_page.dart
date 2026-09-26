@@ -10,6 +10,7 @@ import '../../domain/repositories/product_repository.dart';
 import '../../domain/services/image_services.dart';
 import '../../domain/services/location_services.dart';
 import '../cubit/product_form_cubit.dart';
+import 'product_image_crop_page.dart';
 
 class ProductFormPage extends StatelessWidget {
   const ProductFormPage({
@@ -525,16 +526,20 @@ class _ImagePickerCard extends StatelessWidget {
                     spacing: 8,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: () => context
-                            .read<ProductFormCubit>()
-                            .pickImage(ImagePickSource.camera),
+                        onPressed: loading
+                            ? null
+                            : () =>
+                                  _pickAndCrop(context, ImagePickSource.camera),
                         icon: const Icon(Icons.camera_alt_outlined),
                         label: const Text('Kamera'),
                       ),
                       OutlinedButton.icon(
-                        onPressed: () => context
-                            .read<ProductFormCubit>()
-                            .pickImage(ImagePickSource.gallery),
+                        onPressed: loading
+                            ? null
+                            : () => _pickAndCrop(
+                                context,
+                                ImagePickSource.gallery,
+                              ),
                         icon: const Icon(Icons.photo_library_outlined),
                         label: const Text('Galeri'),
                       ),
@@ -587,8 +592,24 @@ class _ImagePickerCard extends StatelessWidget {
       ),
     );
     if (source != null && context.mounted) {
-      await context.read<ProductFormCubit>().pickImage(source);
+      await _pickAndCrop(context, source);
     }
+  }
+
+  Future<void> _pickAndCrop(
+    BuildContext context,
+    ImagePickSource source,
+  ) async {
+    final cubit = context.read<ProductFormCubit>();
+    final image = await cubit.pickImage(source);
+    if (!context.mounted || image == null) return;
+    final croppedImage = await Navigator.of(context).push<Uint8List>(
+      MaterialPageRoute(
+        builder: (_) => ProductImageCropPage(imageBytes: image.originalBytes),
+      ),
+    );
+    if (!context.mounted || croppedImage == null) return;
+    await cubit.applyCroppedImage(croppedImage, mimeType: image.mimeType);
   }
 }
 

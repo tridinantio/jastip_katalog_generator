@@ -12,7 +12,9 @@ import 'package:jastip_katalog_generator/features/product/presentation/pages/pro
 import 'package:jastip_katalog_generator/features/trip/domain/entities/trip.dart';
 
 void main() {
-  testWidgets('ganti foto menyediakan kamera dan galeri', (tester) async {
+  testWidgets('memilih foto membuka editor crop sebelum dipakai', (
+    tester,
+  ) async {
     final picker = _FakeProductImagePicker();
     await tester.pumpWidget(
       MaterialApp(
@@ -27,17 +29,15 @@ void main() {
 
     await tester.tap(find.text('Galeri'));
     await tester.pump();
-    expect(find.text('Ganti foto'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Potong foto'), findsOneWidget);
+    expect(find.text('Gunakan foto'), findsOneWidget);
 
-    await tester.tap(find.text('Ganti foto'));
-    await tester.pumpAndSettle();
-    expect(find.text('Ambil dari kamera'), findsOneWidget);
-    expect(find.text('Pilih dari galeri'), findsOneWidget);
+    await tester.tap(find.byTooltip('Batal'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    await tester.tap(find.text('Ambil dari kamera'));
-    await tester.pumpAndSettle();
-
-    expect(picker.sources, [ImagePickSource.gallery, ImagePickSource.camera]);
+    expect(picker.sources, [ImagePickSource.gallery]);
     expect(tester.takeException(), isNull);
   });
 
@@ -117,6 +117,16 @@ class _FakeProductImagePicker implements ProductImagePicker {
       mimeType: 'image/png',
     );
   }
+
+  @override
+  Future<PickedProductImage> prepare(
+    Uint8List originalBytes, {
+    required String mimeType,
+  }) async => PickedProductImage(
+    originalBytes: originalBytes,
+    thumbnailBytes: originalBytes,
+    mimeType: mimeType,
+  );
 }
 
 class _FakeProductRepository implements ProductRepository {

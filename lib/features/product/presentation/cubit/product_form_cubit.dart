@@ -302,8 +302,8 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     emit(state.copyWith(priceText: value, priceBreakdown: breakdown));
   }
 
-  Future<void> pickImage(ImagePickSource source) async {
-    if (state.status == ProductFormStatus.pickingImage) return;
+  Future<PickedProductImage?> pickImage(ImagePickSource source) async {
+    if (state.status == ProductFormStatus.pickingImage) return null;
     emit(
       state.copyWith(
         status: ProductFormStatus.pickingImage,
@@ -314,8 +314,36 @@ class ProductFormCubit extends Cubit<ProductFormState> {
       final image = await _imagePicker.pick(source);
       if (image == null) {
         emit(state.copyWith(status: ProductFormStatus.editing));
-        return;
+        return null;
       }
+      emit(state.copyWith(status: ProductFormStatus.editing));
+      return image;
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: ProductFormStatus.failure,
+          message: 'Foto gagal dibuka: $error',
+        ),
+      );
+      return null;
+    }
+  }
+
+  Future<void> applyCroppedImage(
+    Uint8List originalBytes, {
+    required String mimeType,
+  }) async {
+    emit(
+      state.copyWith(
+        status: ProductFormStatus.pickingImage,
+        clearMessage: true,
+      ),
+    );
+    try {
+      final image = await _imagePicker.prepare(
+        originalBytes,
+        mimeType: mimeType,
+      );
       emit(
         state.copyWith(
           status: ProductFormStatus.editing,
@@ -328,7 +356,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
       emit(
         state.copyWith(
           status: ProductFormStatus.failure,
-          message: 'Foto gagal dibuka: $error',
+          message: 'Foto gagal diproses: $error',
         ),
       );
     }

@@ -41,6 +41,7 @@ dependencies:
   http: ^1.6.0
   image_picker: ^1.2.3
   image: ^4.9.2
+  crop_your_image: ^2.0.0
   gal: ^2.3.3
   share_plus: ^13.3.0
   intl: ^0.20.3

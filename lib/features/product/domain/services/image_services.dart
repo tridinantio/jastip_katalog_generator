@@ -16,6 +16,11 @@ class PickedProductImage {
 
 abstract interface class ProductImagePicker {
   Future<PickedProductImage?> pick(ImagePickSource source);
+
+  Future<PickedProductImage> prepare(
+    Uint8List originalBytes, {
+    required String mimeType,
+  });
 }
 
 abstract interface class CatalogExportService {

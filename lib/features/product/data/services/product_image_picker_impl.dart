@@ -18,11 +18,22 @@ class ProductImagePickerImpl implements ProductImagePicker {
     );
     if (file == null) return null;
     final original = await file.readAsBytes();
-    final thumbnail = await compute(_makeThumbnail, original);
-    return PickedProductImage(
-      originalBytes: original,
-      thumbnailBytes: thumbnail,
+    return prepare(
+      original,
       mimeType: file.mimeType ?? _guessMimeType(file.name),
+    );
+  }
+
+  @override
+  Future<PickedProductImage> prepare(
+    Uint8List originalBytes, {
+    required String mimeType,
+  }) async {
+    final thumbnail = await compute(_makeThumbnail, originalBytes);
+    return PickedProductImage(
+      originalBytes: originalBytes,
+      thumbnailBytes: thumbnail,
+      mimeType: mimeType,
     );
   }
 }

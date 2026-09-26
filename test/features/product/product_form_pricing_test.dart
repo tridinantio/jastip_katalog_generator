@@ -32,7 +32,11 @@ void main() {
       expect(cubit.state.priceBreakdown!.percentageFeeIdr, 0);
       expect(cubit.state.priceBreakdown!.fixedFeeIdr, 0);
 
-      await cubit.pickImage(ImagePickSource.gallery);
+      final image = await cubit.pickImage(ImagePickSource.gallery);
+      await cubit.applyCroppedImage(
+        image!.originalBytes,
+        mimeType: image.mimeType,
+      );
       await cubit.submit();
 
       expect(repository.createdProduct, isNotNull);
@@ -67,6 +71,16 @@ class _FakeProductImagePicker implements ProductImagePicker {
       mimeType: 'image/jpeg',
     );
   }
+
+  @override
+  Future<PickedProductImage> prepare(
+    Uint8List originalBytes, {
+    required String mimeType,
+  }) async => PickedProductImage(
+    originalBytes: originalBytes,
+    thumbnailBytes: originalBytes,
+    mimeType: mimeType,
+  );
 }
 
 class _FakeLocationService implements ProductLocationService {
