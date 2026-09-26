@@ -141,9 +141,9 @@ class _DashboardOverview extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const AtelierHeading(
-        eyebrow: 'JASTIP / YOUR TRAVEL ATELIER',
-        title: 'Pergi. Temukan. Titip.',
-        subtitle: 'Temuan istimewa, dari perjalanan Anda.',
+        eyebrow: 'Haru Honjayaa',
+        title: 'Aku Jalan, Kamu Titip',
+        subtitle: 'Titipan istimewa dari setiap perjalanan',
       ),
       const SizedBox(height: 24),
       LayoutBuilder(
