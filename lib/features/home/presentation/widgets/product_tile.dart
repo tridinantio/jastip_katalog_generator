@@ -117,7 +117,7 @@ class ProductTile extends StatelessWidget {
     child: InkWell(
       onTap: onTap,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: Image.memory(
