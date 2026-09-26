@@ -18,6 +18,7 @@ import '../../../shopping/domain/entities/shopping_request.dart';
 import '../../../shopping/domain/repositories/shopping_repository.dart';
 import '../../../shopping/presentation/cubit/shopping_requests_cubit.dart';
 import '../cubit/catalog_preview_cubit.dart';
+import 'product_form_page.dart';
 
 class ProductDetailPage extends StatelessWidget {
   const ProductDetailPage({
@@ -97,6 +98,42 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
                     tooltip: 'Bagikan',
                     onPressed: busy ? null : () => _share(context),
                     icon: const Icon(Icons.share_outlined),
+                  ),
+                  PopupMenuButton<_ProductAction>(
+                    tooltip: 'Aksi produk',
+                    onSelected: busy || state.product == null
+                        ? null
+                        : (action) => _handleProductAction(
+                            context,
+                            action,
+                            state.product!,
+                          ),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: _ProductAction.edit,
+                        child: ListTile(
+                          leading: Icon(Icons.edit_outlined),
+                          title: Text('Edit produk'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ProductAction.duplicate,
+                        child: ListTile(
+                          leading: Icon(Icons.copy_outlined),
+                          title: Text('Duplikat produk'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ProductAction.delete,
+                        child: ListTile(
+                          leading: Icon(Icons.delete_outline),
+                          title: Text('Hapus produk'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               );
@@ -206,6 +243,99 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
     await context.read<CatalogPreviewCubit>().share(bytes);
   }
 
+  Future<void> _handleProductAction(
+    BuildContext context,
+    _ProductAction action,
+    Product product,
+  ) async {
+    final previewCubit = context.read<CatalogPreviewCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    switch (action) {
+      case _ProductAction.edit:
+        final saved = await _openProductForm(context, productId: product.id);
+        if (saved && mounted) {
+          await previewCubit.load(product.id);
+        }
+        break;
+      case _ProductAction.duplicate:
+        final saved = await _openProductForm(
+          context,
+          duplicateProductId: product.id,
+        );
+        if (saved && mounted) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Salinan produk berhasil dibuat.')),
+          );
+        }
+        break;
+      case _ProductAction.delete:
+        await _confirmAndDeleteProduct(context, product);
+        break;
+    }
+  }
+
+  Future<bool> _openProductForm(
+    BuildContext context, {
+    String? productId,
+    String? duplicateProductId,
+  }) async {
+    final productRepository = context.read<ProductRepository>();
+    final imagePicker = context.read<ProductImagePicker>();
+    final locationService = context.read<ProductLocationService>();
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ProductFormPage(
+          trip: widget.trip,
+          productRepository: productRepository,
+          imagePicker: imagePicker,
+          locationService: locationService,
+          productId: productId,
+          duplicateProductId: duplicateProductId,
+        ),
+      ),
+    );
+    return saved ?? false;
+  }
+
+  Future<void> _confirmAndDeleteProduct(
+    BuildContext context,
+    Product product,
+  ) async {
+    final productRepository = context.read<ProductRepository>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus produk?'),
+        content: Text(
+          '${product.name} beserta gambar katalog dan checklist pembelinya akan dihapus.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await productRepository.deleteProduct(product.id);
+      if (!mounted) return;
+      navigator.pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Produk gagal dihapus: $error')),
+      );
+    }
+  }
+
   Future<void> _openLocation(
     BuildContext context,
     ProductLocation location,
@@ -245,6 +375,8 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
     }
   }
 }
+
+enum _ProductAction { edit, duplicate, delete }
 
 class _ProductInfoCard extends StatelessWidget {
   const _ProductInfoCard({required this.product, required this.trip});

@@ -142,12 +142,14 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     required Trip trip,
     required ProductRepository productRepository,
     String? productId,
+    String? duplicateProductId,
   }) : _repository = productRepository,
        _productId = productId,
+       _duplicateProductId = duplicateProductId,
        super(
          ProductFormState(
            trip: trip,
-           status: productId == null
+           status: productId == null && duplicateProductId == null
                ? ProductFormStatus.editing
                : ProductFormStatus.loading,
          ),
@@ -157,20 +159,23 @@ class ProductFormCubit extends Cubit<ProductFormState> {
   final ProductImagePicker _imagePicker;
   final ProductLocationService _locationService;
   final String? _productId;
+  final String? _duplicateProductId;
 
   Future<void> initialize() async {
     await _loadLocationLabels();
-    final productId = _productId;
-    if (productId == null) return;
+    final sourceProductId = _productId ?? _duplicateProductId;
+    if (sourceProductId == null) return;
     try {
-      final product = await _repository.getProduct(productId);
+      final product = await _repository.getProduct(sourceProductId);
       if (product.tripId != state.trip.id) {
         throw StateError('Produk tidak termasuk dalam trip aktif.');
       }
       emit(
         state.copyWith(
           status: ProductFormStatus.editing,
-          name: product.name,
+          name: _duplicateProductId == null
+              ? product.name
+              : '${product.name} (salinan)',
           priceText: _formatMinorForInput(product.originalPriceMinor),
           note: product.note,
           category: product.category,

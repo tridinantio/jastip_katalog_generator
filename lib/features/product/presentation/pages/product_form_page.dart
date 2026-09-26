@@ -18,14 +18,19 @@ class ProductFormPage extends StatelessWidget {
     required this.imagePicker,
     required this.locationService,
     this.productId,
+    this.duplicateProductId,
     super.key,
-  });
+  }) : assert(
+         productId == null || duplicateProductId == null,
+         'Produk tidak dapat diedit dan diduplikat sekaligus.',
+       );
 
   final Trip trip;
   final ProductRepository productRepository;
   final ProductImagePicker imagePicker;
   final ProductLocationService locationService;
   final String? productId;
+  final String? duplicateProductId;
 
   @override
   Widget build(BuildContext context) {
@@ -36,16 +41,34 @@ class ProductFormPage extends StatelessWidget {
         trip: trip,
         productRepository: productRepository,
         productId: productId,
+        duplicateProductId: duplicateProductId,
       )..initialize(),
-      child: _ProductFormView(isEditing: productId != null),
+      child: _ProductFormView(
+        mode: productId != null
+            ? _ProductFormMode.edit
+            : duplicateProductId != null
+            ? _ProductFormMode.duplicate
+            : _ProductFormMode.create,
+      ),
     );
   }
 }
 
-class _ProductFormView extends StatelessWidget {
-  const _ProductFormView({required this.isEditing});
+enum _ProductFormMode { create, edit, duplicate }
 
-  final bool isEditing;
+class _ProductFormView extends StatelessWidget {
+  const _ProductFormView({required this.mode});
+
+  final _ProductFormMode mode;
+
+  bool get _loadsExistingProduct => mode != _ProductFormMode.create;
+  bool get _isEditing => mode == _ProductFormMode.edit;
+
+  String get _title => switch (mode) {
+    _ProductFormMode.create => 'Tambah produk',
+    _ProductFormMode.edit => 'Edit produk',
+    _ProductFormMode.duplicate => 'Duplikat produk',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +78,7 @@ class _ProductFormView extends StatelessWidget {
           previous.message != current.message,
       listener: (context, state) {
         if (state.status == ProductFormStatus.success) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(true);
           return;
         }
         if (state.message != null) {
@@ -64,15 +87,13 @@ class _ProductFormView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(isEditing ? 'Edit produk' : 'Tambah produk'),
-        ),
+        appBar: AppBar(title: Text(_title)),
         body: BlocBuilder<ProductFormCubit, ProductFormState>(
           builder: (context, state) {
             if (state.status == ProductFormStatus.loading) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (isEditing &&
+            if (_loadsExistingProduct &&
                 state.status == ProductFormStatus.failure &&
                 state.originalImageBytes == null) {
               return Center(
@@ -277,7 +298,7 @@ class _ProductFormView extends StatelessWidget {
                             color: Colors.white,
                           ),
                         )
-                      : Text(isEditing ? 'Simpan perubahan' : 'Simpan produk'),
+                      : Text(_isEditing ? 'Simpan perubahan' : 'Simpan produk'),
                 ),
               ],
             );
@@ -291,7 +312,7 @@ class _ProductFormView extends StatelessWidget {
     BuildContext context,
     ProductFormCubit cubit,
   ) async {
-    if (!isEditing) {
+    if (!_isEditing) {
       await cubit.submit();
       return;
     }
