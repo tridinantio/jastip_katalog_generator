@@ -76,9 +76,7 @@ class HomeContent extends StatelessWidget {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     sliver: SliverList.separated(
-                      itemCount: productState.products.length > 5
-                          ? 5
-                          : productState.products.length,
+                      itemCount: productState.products.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final product = productState.products[index];
