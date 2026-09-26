@@ -75,6 +75,13 @@ void main() {
         expect(tester.takeException(), isNull);
         await tab('Produk');
         await _snapshot(tester, boundaryKey, '${scenario.name}-products');
+        expect(find.text('Hinoki hand cream'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('category-beauty')));
+        await tester.pumpAndSettle();
+        expect(find.text('Hinoki hand cream'), findsNothing);
+        await tester.tap(find.byKey(const ValueKey('category-beauty')));
+        await tester.pumpAndSettle();
+        expect(find.text('Hinoki hand cream'), findsOneWidget);
         await tester.enterText(find.byType(TextField).first, 'Matcha');
         await tester.runAsync(() async {});
         await tester.pumpAndSettle();
@@ -90,16 +97,9 @@ void main() {
         await _snapshot(tester, boundaryKey, '${scenario.name}-filter');
         await tester.tap(find.byTooltip('Tutup'));
         await tester.pumpAndSettle();
-        await tester.scrollUntilVisible(
-          find.text('Matcha ritual set').hitTestable(),
-          180,
-          scrollable: find
-              .descendant(
-                of: find.byKey(const PageStorageKey('products-category-list')),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
+        await tester.enterText(find.byType(TextField).first, 'Matcha');
+        await tester.runAsync(() async {});
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Matcha ritual set'));
         await tester.pumpAndSettle();
         expect(find.text('Detail Produk'), findsOneWidget);

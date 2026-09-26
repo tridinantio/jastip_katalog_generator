@@ -19,6 +19,7 @@ void main() {
       'Tanpa kategori',
     ]);
     expect(groups[1].products.map((product) => product.id), ['1', '2']);
+    expect(groups[1].representativeProduct.id, '1');
     expect(groups.last.isUncategorized, isTrue);
   });
 }

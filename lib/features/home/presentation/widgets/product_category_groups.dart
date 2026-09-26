@@ -2,14 +2,18 @@ import '../../../product/domain/entities/product.dart';
 
 class ProductCategoryGroup {
   const ProductCategoryGroup({
+    required this.key,
     required this.label,
     required this.products,
     this.isUncategorized = false,
   });
 
+  final String key;
   final String label;
   final List<ProductSummary> products;
   final bool isUncategorized;
+
+  ProductSummary get representativeProduct => products.first;
 }
 
 List<ProductCategoryGroup> groupProductsByCategory(
@@ -30,6 +34,7 @@ List<ProductCategoryGroup> groupProductsByCategory(
   final result = categoryKeys
       .map(
         (key) => ProductCategoryGroup(
+          key: key,
           label: labels[key]!,
           products: List.unmodifiable(groups[key]!),
         ),
@@ -39,6 +44,7 @@ List<ProductCategoryGroup> groupProductsByCategory(
   if (uncategorizedProducts != null) {
     result.add(
       ProductCategoryGroup(
+        key: '',
         label: 'Tanpa kategori',
         products: List.unmodifiable(uncategorizedProducts),
         isUncategorized: true,

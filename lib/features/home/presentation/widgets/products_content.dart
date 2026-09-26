@@ -15,8 +15,24 @@ import '../../../shopping/domain/repositories/shopping_repository.dart';
 import 'product_category_groups.dart';
 import 'product_tile.dart';
 
-class ProductsContent extends StatelessWidget {
+class ProductsContent extends StatefulWidget {
   const ProductsContent({super.key});
+
+  @override
+  State<ProductsContent> createState() => _ProductsContentState();
+}
+
+class _ProductsContentState extends State<ProductsContent> {
+  final Map<String, bool> _categoryExpansion = {};
+
+  bool _isCategoryExpanded(ProductCategoryGroup group, int index) =>
+      _categoryExpansion[group.key] ?? index == 0;
+
+  void _toggleCategory(ProductCategoryGroup group, int index) {
+    setState(() {
+      _categoryExpansion[group.key] = !_isCategoryExpanded(group, index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,58 +145,77 @@ class ProductsContent extends StatelessWidget {
                       return CustomScrollView(
                         key: const PageStorageKey('products-category-list'),
                         slivers: [
-                          for (final group in groups) ...[
+                          for (
+                            var index = 0;
+                            index < groups.length;
+                            index++
+                          ) ...[
                             SliverPadding(
                               padding: EdgeInsets.fromLTRB(
                                 20,
-                                group == groups.first ? 0 : 28,
+                                index == 0 ? 0 : 14,
                                 20,
-                                10,
+                                0,
                               ),
                               sliver: SliverToBoxAdapter(
-                                child: _CategorySectionHeader(group: group),
+                                child: _CategorySectionHeader(
+                                  group: groups[index],
+                                  isExpanded: _isCategoryExpanded(
+                                    groups[index],
+                                    index,
+                                  ),
+                                  onTap: () =>
+                                      _toggleCategory(groups[index], index),
+                                ),
                               ),
                             ),
-                            SliverPadding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              sliver: SliverGrid(
-                                gridDelegate: gridDelegate,
-                                delegate: SliverChildBuilderDelegate((
-                                  context,
-                                  index,
-                                ) {
-                                  final product = group.products[index];
-                                  return ProductTile(
-                                    gallery: true,
-                                    product: product,
-                                    trip: trip,
-                                    onTap: () => Navigator.of(context)
-                                        .push<void>(
-                                          MaterialPageRoute(
-                                            builder: (_) => ProductDetailPage(
-                                              productId: product.id,
-                                              trip: trip,
-                                              productRepository: context
-                                                  .read<ProductRepository>(),
-                                              exportService: context
-                                                  .read<CatalogExportService>(),
-                                              shoppingRepository: context
-                                                  .read<ShoppingRepository>(),
-                                              locationService: context
-                                                  .read<
-                                                    ProductLocationService
-                                                  >(),
+                            if (_isCategoryExpanded(groups[index], index))
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  10,
+                                  20,
+                                  0,
+                                ),
+                                sliver: SliverGrid(
+                                  gridDelegate: gridDelegate,
+                                  delegate: SliverChildBuilderDelegate((
+                                    context,
+                                    productIndex,
+                                  ) {
+                                    final product =
+                                        groups[index].products[productIndex];
+                                    return ProductTile(
+                                      gallery: true,
+                                      product: product,
+                                      trip: trip,
+                                      onTap: () => Navigator.of(context)
+                                          .push<void>(
+                                            MaterialPageRoute(
+                                              builder: (_) => ProductDetailPage(
+                                                productId: product.id,
+                                                trip: trip,
+                                                productRepository: context
+                                                    .read<ProductRepository>(),
+                                                exportService: context
+                                                    .read<
+                                                      CatalogExportService
+                                                    >(),
+                                                shoppingRepository: context
+                                                    .read<ShoppingRepository>(),
+                                                locationService: context
+                                                    .read<
+                                                      ProductLocationService
+                                                    >(),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                    shoppingProgress:
-                                        state.progressByProductId[product.id],
-                                  );
-                                }, childCount: group.products.length),
+                                      shoppingProgress:
+                                          state.progressByProductId[product.id],
+                                    );
+                                  }, childCount: groups[index].products.length),
+                                ),
                               ),
-                            ),
                           ],
                           const SliverToBoxAdapter(child: SizedBox(height: 24)),
                         ],
@@ -215,30 +250,76 @@ class ProductsContent extends StatelessWidget {
 }
 
 class _CategorySectionHeader extends StatelessWidget {
-  const _CategorySectionHeader({required this.group});
+  const _CategorySectionHeader({
+    required this.group,
+    required this.isExpanded,
+    required this.onTap,
+  });
 
   final ProductCategoryGroup group;
+  final bool isExpanded;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        child: Text(
-          group.label.toUpperCase(),
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: group.isUncategorized
-                ? Theme.of(context).colorScheme.onSurfaceVariant
-                : AppTheme.forest,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
-          ),
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      key: ValueKey('category-${group.key}'),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(
+                group.representativeProduct.thumbnailBytes,
+                width: 46,
+                height: 46,
+                fit: BoxFit.cover,
+                cacheWidth: 96,
+                errorBuilder: (_, _, _) => ColoredBox(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const SizedBox.square(
+                    dimension: 46,
+                    child: Icon(Icons.inventory_2_outlined),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    group.label.toUpperCase(),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: group.isUncategorized
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : AppTheme.forest,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${group.products.length} produk',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ],
         ),
       ),
-      Text(
-        '${group.products.length} produk',
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-      ),
-    ],
+    ),
   );
 }
