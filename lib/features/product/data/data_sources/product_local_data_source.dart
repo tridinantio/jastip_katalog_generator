@@ -11,6 +11,7 @@ class ProductListRecord {
     required this.sellingPriceIdr,
     required this.markupBasisPointsOverride,
     required this.fixedFeeIdrOverride,
+    required this.weightGrams,
     required this.thumbnailBytes,
     required this.createdAt,
     required this.category,
@@ -24,6 +25,7 @@ class ProductListRecord {
   final int sellingPriceIdr;
   final int? markupBasisPointsOverride;
   final int? fixedFeeIdrOverride;
+  final int? weightGrams;
   final Uint8List thumbnailBytes;
   final DateTime createdAt;
   final String category;
@@ -49,6 +51,7 @@ class ProductLocalDataSource {
         products.sellingPriceIdr,
         products.markupBasisPointsOverride,
         products.fixedFeeIdrOverride,
+        products.weightGrams,
         products.thumbnailBytes,
         products.createdAt,
         products.category,
@@ -74,6 +77,7 @@ class ProductLocalDataSource {
                 products.markupBasisPointsOverride,
               ),
               fixedFeeIdrOverride: row.read(products.fixedFeeIdrOverride),
+              weightGrams: row.read(products.weightGrams),
               thumbnailBytes: row.read(products.thumbnailBytes)!,
               createdAt: row.read(products.createdAt)!,
               category: row.read(products.category) ?? '',

@@ -8,6 +8,7 @@ class ShoppingSummary extends Equatable {
     required this.estimatedCapitalIdr,
     required this.actualCapitalIdr,
     required this.estimatedProfitIdr,
+    required this.estimatedWeightGrams,
   });
 
   const ShoppingSummary.empty()
@@ -16,7 +17,8 @@ class ShoppingSummary extends Equatable {
       purchasedQuantity = 0,
       estimatedCapitalIdr = 0,
       actualCapitalIdr = 0,
-      estimatedProfitIdr = 0;
+      estimatedProfitIdr = 0,
+      estimatedWeightGrams = 0;
 
   final int requestCount;
   final int totalQuantity;
@@ -24,6 +26,7 @@ class ShoppingSummary extends Equatable {
   final int estimatedCapitalIdr;
   final int actualCapitalIdr;
   final int estimatedProfitIdr;
+  final int estimatedWeightGrams;
 
   int get remainingQuantity => totalQuantity - purchasedQuantity;
 
@@ -37,5 +40,6 @@ class ShoppingSummary extends Equatable {
     estimatedCapitalIdr,
     actualCapitalIdr,
     estimatedProfitIdr,
+    estimatedWeightGrams,
   ];
 }

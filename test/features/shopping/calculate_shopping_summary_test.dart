@@ -27,6 +27,7 @@ void main() {
     name: 'Lip Balm',
     originalPriceMinor: 300000,
     sellingPriceIdr: 380000,
+    weightGrams: 250,
     thumbnailBytes: Uint8List.fromList([1]),
     createdAt: DateTime(2026, 9, 5),
   );
@@ -69,6 +70,7 @@ void main() {
     expect(summary.estimatedCapitalIdr, 990000);
     expect(summary.actualCapitalIdr, 660000);
     expect(summary.estimatedProfitIdr, 150000);
+    expect(summary.estimatedWeightGrams, 750);
   });
 
   test('menggunakan pengaturan trip terbaru untuk menghitung ulang', () {

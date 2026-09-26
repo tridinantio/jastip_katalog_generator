@@ -28,6 +28,7 @@ class ProductRepositoryImpl implements ProductRepository {
                 sellingPriceIdr: record.sellingPriceIdr,
                 markupBasisPointsOverride: record.markupBasisPointsOverride,
                 fixedFeeIdrOverride: record.fixedFeeIdrOverride,
+                weightGrams: record.weightGrams,
                 thumbnailBytes: record.thumbnailBytes,
                 createdAt: record.createdAt,
                 category: record.category,

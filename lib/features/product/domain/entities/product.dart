@@ -73,6 +73,7 @@ class ProductSummary extends Equatable {
     required this.sellingPriceIdr,
     this.markupBasisPointsOverride,
     this.fixedFeeIdrOverride,
+    this.weightGrams,
     required this.thumbnailBytes,
     required this.createdAt,
     this.category = '',
@@ -86,6 +87,7 @@ class ProductSummary extends Equatable {
   final int sellingPriceIdr;
   final int? markupBasisPointsOverride;
   final int? fixedFeeIdrOverride;
+  final int? weightGrams;
   final Uint8List thumbnailBytes;
   final DateTime createdAt;
   final String category;
@@ -100,6 +102,7 @@ class ProductSummary extends Equatable {
     sellingPriceIdr,
     markupBasisPointsOverride,
     fixedFeeIdrOverride,
+    weightGrams,
     thumbnailBytes,
     createdAt,
     category,

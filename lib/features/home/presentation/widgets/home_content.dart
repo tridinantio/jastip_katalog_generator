@@ -255,11 +255,16 @@ class _ShoppingSummaryCard extends StatelessWidget {
             const SizedBox(height: 20),
             LayoutBuilder(
               builder: (context, constraints) {
+                final singleColumn =
+                    MediaQuery.textScalerOf(context).scale(14) > 19;
+                final columnCount = singleColumn
+                    ? 1
+                    : constraints.maxWidth >= 520
+                    ? 4
+                    : 2;
                 final width =
-                    constraints.maxWidth < 270 ||
-                        MediaQuery.textScalerOf(context).scale(14) > 19
-                    ? constraints.maxWidth
-                    : (constraints.maxWidth - 24) / 3;
+                    (constraints.maxWidth - (12 * (columnCount - 1))) /
+                    columnCount;
                 return Wrap(
                   spacing: 12,
                   runSpacing: 16,
@@ -284,6 +289,13 @@ class _ShoppingSummaryCard extends StatelessWidget {
                         label: 'Keuntungan',
                         value: formatIdr(summary.estimatedProfitIdr),
                         valueColor: AppTheme.rust,
+                      ),
+                    ),
+                    SizedBox(
+                      width: width,
+                      child: _SummaryMetric(
+                        label: 'Berat estimasi',
+                        value: formatWeight(summary.estimatedWeightGrams),
                       ),
                     ),
                   ],

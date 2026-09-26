@@ -26,6 +26,12 @@ String formatRate(int rateMicros) {
   ).format(rate);
 }
 
+String formatWeight(int grams) {
+  if (grams < 1000) return '$grams g';
+  final kilograms = grams / 1000;
+  return '${NumberFormat.decimalPattern('id_ID').format(kilograms)} kg';
+}
+
 String formatShortDate(DateTime date) =>
     DateFormat('d MMM yyyy', 'id_ID').format(date.toLocal());
 

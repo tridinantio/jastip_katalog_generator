@@ -20,6 +20,7 @@ abstract final class CalculateShoppingSummary {
     var estimatedCapitalIdr = 0;
     var actualCapitalIdr = 0;
     var estimatedProfitIdr = 0;
+    var estimatedWeightGrams = 0;
     var requestCount = 0;
 
     for (final request in requests) {
@@ -39,6 +40,7 @@ abstract final class CalculateShoppingSummary {
       totalQuantity += quantity;
       estimatedCapitalIdr += breakdown.capitalIdr * quantity;
       estimatedProfitIdr += profitPerUnit * quantity;
+      estimatedWeightGrams += (product.weightGrams ?? 0) * quantity;
       if (request.isPurchased) {
         purchasedQuantity += quantity;
         actualCapitalIdr += breakdown.capitalIdr * quantity;
@@ -52,6 +54,7 @@ abstract final class CalculateShoppingSummary {
       estimatedCapitalIdr: estimatedCapitalIdr,
       actualCapitalIdr: actualCapitalIdr,
       estimatedProfitIdr: estimatedProfitIdr,
+      estimatedWeightGrams: estimatedWeightGrams,
     );
   }
 }
