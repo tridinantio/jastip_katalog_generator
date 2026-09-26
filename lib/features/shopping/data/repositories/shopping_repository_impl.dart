@@ -52,7 +52,7 @@ class ShoppingRepositoryImpl implements ShoppingRepository {
   @override
   Future<String> addRequest(NewShoppingRequest request) async {
     final now = DateTime.now();
-    final id = '${now.microsecondsSinceEpoch}_${_random.nextInt(1 << 32)}';
+    final id = '${now.microsecondsSinceEpoch}_${_random.nextInt(0x7fffffff)}';
     await _localDataSource.insertRequest(
       id: id,
       tripId: request.tripId,
