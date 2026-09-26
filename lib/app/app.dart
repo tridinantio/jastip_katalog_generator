@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/widgets/unfocus_on_tap.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import 'app_dependencies.dart';
@@ -30,6 +31,8 @@ class JastipApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         home: const SplashPage(nextPage: HomePage()),
+        builder: (context, child) =>
+            UnfocusOnTap(child: child ?? const SizedBox.shrink()),
       ),
     );
   }
