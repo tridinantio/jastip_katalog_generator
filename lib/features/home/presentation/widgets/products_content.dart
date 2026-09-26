@@ -8,7 +8,6 @@ import '../../../product/domain/services/image_services.dart';
 import '../../../product/domain/services/location_services.dart';
 import '../../../product/presentation/cubit/product_list_cubit.dart';
 import '../../../product/presentation/pages/catalog_preview_page.dart';
-import '../../../product/presentation/pages/product_form_page.dart';
 import '../../../product/presentation/widgets/product_filter_sheet.dart';
 import '../../../trip/presentation/cubit/active_trip_cubit.dart';
 import '../../../shopping/domain/repositories/shopping_repository.dart';
@@ -133,7 +132,6 @@ class ProductsContent extends StatelessWidget {
                           gallery: true,
                           product: product,
                           trip: trip,
-                          isDeleting: state.deletingProductId == product.id,
                           onTap: () => Navigator.of(context).push<void>(
                             MaterialPageRoute(
                               builder: (_) => ProductDetailPage(
@@ -149,24 +147,6 @@ class ProductsContent extends StatelessWidget {
                                     .read<ProductLocationService>(),
                               ),
                             ),
-                          ),
-                          onEdit: () => Navigator.of(context).push<void>(
-                            MaterialPageRoute(
-                              builder: (_) => ProductFormPage(
-                                trip: trip,
-                                productId: product.id,
-                                productRepository: context
-                                    .read<ProductRepository>(),
-                                imagePicker: context.read<ProductImagePicker>(),
-                                locationService: context
-                                    .read<ProductLocationService>(),
-                              ),
-                            ),
-                          ),
-                          onDelete: () => confirmAndDeleteProduct(
-                            context,
-                            product.id,
-                            product.name,
                           ),
                           shoppingProgress:
                               state.progressByProductId[product.id],

@@ -82,16 +82,7 @@ class HomeContent extends StatelessWidget {
                         return ProductTile(
                           product: product,
                           trip: trip,
-                          isDeleting:
-                              productState.deletingProductId == product.id,
                           onTap: () => _openPreview(context, product.id, trip),
-                          onEdit: () =>
-                              _openEditForm(context, product.id, trip),
-                          onDelete: () => confirmAndDeleteProduct(
-                            context,
-                            product.id,
-                            product.name,
-                          ),
                           shoppingProgress:
                               productState.progressByProductId[product.id],
                         );
@@ -111,24 +102,6 @@ class HomeContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => ProductFormPage(
           trip: trip,
-          productRepository: context.read<ProductRepository>(),
-          imagePicker: context.read<ProductImagePicker>(),
-          locationService: context.read<ProductLocationService>(),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openEditForm(
-    BuildContext context,
-    String productId,
-    Trip trip,
-  ) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => ProductFormPage(
-          trip: trip,
-          productId: productId,
           productRepository: context.read<ProductRepository>(),
           imagePicker: context.read<ProductImagePicker>(),
           locationService: context.read<ProductLocationService>(),
