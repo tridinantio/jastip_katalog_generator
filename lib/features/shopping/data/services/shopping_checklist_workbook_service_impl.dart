@@ -160,7 +160,7 @@ class ShoppingChecklistWorkbookServiceImpl
         imageBytes: bytes,
         imageType: imageType,
         anchor: ImageAnchor.fromPixels(
-          column: 1,
+          column: 0,
           row: row,
           widthPixels: 48,
           heightPixels: 48,
