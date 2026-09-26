@@ -11,13 +11,18 @@ import '../../domain/repositories/shopping_repository.dart';
 enum BuyerDataStatus { initial, loading, ready, failure }
 
 class BuyerDataItem extends Equatable {
-  const BuyerDataItem({required this.productName, required this.request});
+  const BuyerDataItem({
+    required this.productName,
+    required this.request,
+    required this.sellingPriceIdr,
+  });
 
   final String productName;
   final ShoppingRequest request;
+  final int? sellingPriceIdr;
 
   @override
-  List<Object> get props => [productName, request];
+  List<Object?> get props => [productName, request, sellingPriceIdr];
 }
 
 class BuyerDataGroup extends Equatable {
@@ -31,6 +36,13 @@ class BuyerDataGroup extends Equatable {
   int get pendingItemCount => items.length - purchasedItemCount;
   int get totalQuantity =>
       items.fold<int>(0, (sum, item) => sum + item.request.quantity);
+  int? get totalAmountIdr {
+    if (items.any((item) => item.sellingPriceIdr == null)) return null;
+    return items.fold<int>(
+      0,
+      (sum, item) => sum + item.sellingPriceIdr! * item.request.quantity,
+    );
+  }
 
   @override
   List<Object> get props => [name, items];
@@ -129,6 +141,7 @@ class BuyerDataCubit extends Cubit<BuyerDataState> {
         BuyerDataItem(
           productName:
               productsById[request.productId]?.name ?? 'Produk dihapus',
+          sellingPriceIdr: productsById[request.productId]?.sellingPriceIdr,
           request: request,
         ),
       );

@@ -31,12 +31,19 @@ void main() {
       );
       products.add([
         _product('product-1', 'Matcha'),
-        _product('product-2', 'Lip Balm'),
+        _product('product-2', 'Lip Balm', sellingPriceIdr: 17500),
       ]);
       requests.add([
-        _request('request-1', ' Rina ', 'product-1', isPurchased: true),
-        _request('request-2', 'rina', 'product-2'),
+        _request(
+          'request-1',
+          ' Rina ',
+          'product-1',
+          quantity: 2,
+          isPurchased: true,
+        ),
+        _request('request-2', 'rina', 'product-2', quantity: 3),
         _request('request-3', 'Dina', 'product-1'),
+        _request('request-4', 'Dina', 'deleted-product'),
       ]);
 
       final state = await ready;
@@ -44,6 +51,9 @@ void main() {
       expect(rina.items, hasLength(2));
       expect(rina.purchasedItemCount, 1);
       expect(rina.pendingItemCount, 1);
+      expect(rina.totalAmountIdr, 74500);
+      final dina = state.buyers.firstWhere((buyer) => buyer.name == 'Dina');
+      expect(dina.totalAmountIdr, isNull);
       expect(
         rina.items.map((item) => item.productName),
         containsAll(['Matcha', 'Lip Balm']),
@@ -52,12 +62,16 @@ void main() {
   );
 }
 
-ProductSummary _product(String id, String name) => ProductSummary(
+ProductSummary _product(
+  String id,
+  String name, {
+  int sellingPriceIdr = 11000,
+}) => ProductSummary(
   id: id,
   tripId: 'trip-1',
   name: name,
   originalPriceMinor: 10000,
-  sellingPriceIdr: 11000,
+  sellingPriceIdr: sellingPriceIdr,
   thumbnailBytes: Uint8List.fromList([1]),
   createdAt: DateTime(2026, 9, 8),
 );
@@ -66,13 +80,14 @@ ShoppingRequest _request(
   String id,
   String buyerName,
   String productId, {
+  int quantity = 1,
   bool isPurchased = false,
 }) => ShoppingRequest(
   id: id,
   tripId: 'trip-1',
   productId: productId,
   buyerName: buyerName,
-  quantity: 1,
+  quantity: quantity,
   note: '',
   isPurchased: isPurchased,
   purchasedAt: null,

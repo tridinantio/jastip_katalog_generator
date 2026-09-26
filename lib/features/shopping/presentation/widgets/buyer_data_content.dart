@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubit/buyer_data_cubit.dart';
-import '../../../../core/widgets/atelier_widgets.dart';
+import '../../../../core/formatters/app_formatters.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/atelier_widgets.dart';
+import '../cubit/buyer_data_cubit.dart';
 
 class BuyerDataContent extends StatelessWidget {
   const BuyerDataContent({super.key});
@@ -130,6 +131,7 @@ class _BuyerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final totalAmountIdr = buyer.totalAmountIdr;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
@@ -147,8 +149,22 @@ class _BuyerCard extends StatelessWidget {
           buyer.name,
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
-        subtitle: Text(
-          '${buyer.totalQuantity} pcs · ${buyer.items.length} titipan',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${buyer.totalQuantity} pcs · ${buyer.items.length} titipan'),
+            const SizedBox(height: 2),
+            Text(
+              totalAmountIdr == null
+                  ? 'Total bayar tidak tersedia'
+                  : 'Total bayar ${formatIdr(totalAmountIdr)}',
+              style: const TextStyle(
+                color: AppTheme.rust,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
         trailing: _ProgressBadge(
           purchased: buyer.purchasedItemCount,
