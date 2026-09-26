@@ -66,6 +66,26 @@ void main() {
     },
   );
 
+  test('trip awal dan trip baru tetap memakai markup default 15 persen', () async {
+    final initialTrip = await repository.ensureDefaultTrip();
+    final createdTrip = await repository.createTrip(
+      NewTrip(
+        name: 'Korea Trip',
+        currencyCode: 'KRW',
+        currencyName: 'South Korean Won',
+        currencySymbol: '₩',
+        rateMicros: 12000000,
+        rateDate: DateTime(2026, 9, 5),
+        rateFetchedAt: DateTime(2026, 9, 5),
+      ),
+    );
+
+    expect(initialTrip.markupBasisPoints, 1500);
+    expect(initialTrip.fixedFeeIdr, 0);
+    expect(createdTrip.markupBasisPoints, 1500);
+    expect(createdTrip.fixedFeeIdr, 0);
+  });
+
   test(
     'produk dengan harga khusus tidak ikut berubah saat trip diperbarui',
     () async {

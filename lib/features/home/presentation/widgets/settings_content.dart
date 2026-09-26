@@ -155,8 +155,11 @@ class _SettingsContentState extends State<SettingsContent> {
                           hintText: '15',
                         ),
                         validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return null;
+                          }
                           final parsed = double.tryParse(
-                            (value ?? '').replaceAll(',', '.'),
+                            value.replaceAll(',', '.'),
                           );
                           return parsed == null || parsed < 0
                               ? 'Markup tidak valid'
@@ -315,7 +318,9 @@ class _SettingsContentState extends State<SettingsContent> {
     final saved = await context.read<ActiveTripCubit>().saveSettings(
       name: _nameController.text,
       currency: currency,
-      markupPercent: double.parse(_markupController.text.replaceAll(',', '.')),
+      markupPercent: _markupController.text.trim().isEmpty
+          ? 0
+          : double.parse(_markupController.text.replaceAll(',', '.')),
       fixedFeeIdr: int.tryParse(_fixedFeeController.text) ?? 0,
       roundingUnitIdr: _roundingUnit,
     );

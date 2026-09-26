@@ -333,7 +333,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     if (state.status == ProductFormStatus.saving) return;
     final originalPriceMinor = _parsePriceMinor(state.priceText);
     final markupBasisPoints = _parseMarkupBasisPoints(state.markupText);
-    final fixedFeeIdr = int.tryParse(state.fixedFeeText.trim());
+    final fixedFeeIdr = _parseFixedFeeIdr(state.fixedFeeText);
     final weightGrams = int.tryParse(state.weightText.trim());
     if (state.name.trim().isEmpty) return _fail('Nama produk wajib diisi.');
     if (state.originalImageBytes == null || state.thumbnailBytes == null) {
@@ -412,8 +412,8 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     final currentMarkup = _parseMarkupBasisPoints(
       markupText ?? state.markupText,
     );
-    final currentFixedFee = int.tryParse(
-      (fixedFeeText ?? state.fixedFeeText).trim(),
+    final currentFixedFee = _parseFixedFeeIdr(
+      fixedFeeText ?? state.fixedFeeText,
     );
     if (usesCustom &&
         (currentMarkup == null ||
@@ -449,9 +449,15 @@ String _formatMinorForInput(int value) {
 }
 
 int? _parseMarkupBasisPoints(String value) {
+  if (value.trim().isEmpty) return 0;
   final percent = double.tryParse(value.trim().replaceAll(',', '.'));
   if (percent == null || !percent.isFinite) return null;
   return (percent * 100).round();
+}
+
+int? _parseFixedFeeIdr(String value) {
+  if (value.trim().isEmpty) return 0;
+  return int.tryParse(value.trim());
 }
 
 String _formatMarkup(int basisPoints) {
