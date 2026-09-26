@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:excel_community/excel_community.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jastip_katalog_generator/features/product/domain/entities/product.dart';
@@ -64,12 +65,12 @@ void main() {
     workbook['Daftar Belanja']
         .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 5))
         .value = TextCellValue(
-      '☑',
+      'Terbeli',
     );
     workbook['Daftar Belanja']
         .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 6))
         .value = TextCellValue(
-      '☐',
+      'Belum dibeli',
     );
     final bytes = workbook.encode();
 
@@ -79,6 +80,36 @@ void main() {
       ('product-1', true),
       ('product-2', false),
     ]);
+  });
+
+  test('menambahkan dropdown status ke kolom checklist', () async {
+    final sharer = _FakeSharer();
+    final service = ShoppingChecklistWorkbookServiceImpl(sharer);
+    final checklist = ShoppingChecklist(
+      tripId: 'trip-1',
+      tripName: 'Japan',
+      items: [
+        ShoppingChecklistItem(
+          productId: 'product-1',
+          name: 'Matcha',
+          category: '',
+          quantity: 1,
+          thumbnailBytes: Uint8List(0),
+          status: ShoppingChecklistStatus.pending,
+        ),
+      ],
+    );
+
+    await service.export(checklist);
+
+    final archive = ZipDecoder().decodeBytes(sharer.bytes!);
+    final worksheet = archive.files
+        .singleWhere((file) => file.name == 'xl/worksheets/sheet1.xml')
+        .readBytes()!;
+    final xml = String.fromCharCodes(worksheet);
+    expect(xml, contains('<dataValidations count="1">'));
+    expect(xml, contains('sqref="A6:A6"'));
+    expect(xml, contains('"Belum dibeli,Terbeli"'));
   });
 
   test('menolak file dari trip lain', () async {

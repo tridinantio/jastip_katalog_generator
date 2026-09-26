@@ -49,6 +49,7 @@ dependencies:
   geolocator: ^14.0.3
   excel_community: ^2.3.0
   archive: ^4.0.7
+  xml: ^7.0.1
   file_picker: ^12.2.0
 
 dev_dependencies:

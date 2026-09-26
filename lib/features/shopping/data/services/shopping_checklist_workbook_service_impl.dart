@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:archive/archive.dart';
 import 'package:excel_community/excel_community.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:xml/xml.dart';
 
 import '../../domain/entities/shopping_checklist.dart';
 import '../../domain/services/shopping_checklist_workbook_service.dart';
@@ -29,13 +32,17 @@ class ShoppingChecklistWorkbookServiceImpl
     _writeListSheet(listSheet, checklist);
     _writeSyncSheet(syncSheet, checklist);
 
-    final bytes = workbook.encode();
-    if (bytes == null || bytes.isEmpty) {
+    final encoded = workbook.encode();
+    if (encoded == null || encoded.isEmpty) {
       throw StateError('File Excel tidak dapat dibuat.');
     }
+    final bytes = _addStatusDropdown(
+      Uint8List.fromList(encoded),
+      checklist.items.length,
+    );
     final fileName =
         'daftar_belanja_${_safeFileName(checklist.tripName)}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.xlsx';
-    await _sharer.share(fileName, Uint8List.fromList(bytes));
+    await _sharer.share(fileName, bytes);
   }
 
   @override
@@ -95,7 +102,7 @@ class ShoppingChecklistWorkbookServiceImpl
       0,
       2,
       TextCellValue(
-        'Ubah checklist: kosong untuk belum dibeli, tanda centang untuk sudah dibeli.',
+        'Pilih status pada kolom Checklist untuk memperbarui belanja.',
       ),
     );
     const headers = ['Checklist', 'Foto', 'Produk', 'Jumlah'];
@@ -111,7 +118,12 @@ class ShoppingChecklistWorkbookServiceImpl
     for (var index = 0; index < checklist.items.length; index++) {
       final item = checklist.items[index];
       final row = _firstItemRow + index;
-      _put(sheet, 0, row, TextCellValue(item.isPurchased ? '☑' : '☐'));
+      _put(
+        sheet,
+        0,
+        row,
+        TextCellValue(item.isPurchased ? 'Terbeli' : 'Belum dibeli'),
+      );
       _put(sheet, 2, row, TextCellValue(item.name));
       _put(sheet, 3, row, IntCellValue(item.quantity));
       _addThumbnail(sheet, item.thumbnailBytes, row);
@@ -186,6 +198,7 @@ class ShoppingChecklistWorkbookServiceImpl
   bool? _checklistValue(String value) {
     final normalized = value.trim().toLowerCase();
     if (const {
+      'terbeli',
       '☑',
       '✓',
       'v',
@@ -198,10 +211,89 @@ class ShoppingChecklistWorkbookServiceImpl
     }.contains(normalized)) {
       return true;
     }
-    if (const {'☐', '', 'tidak', 'no', 'false', '0'}.contains(normalized)) {
+    if (const {
+      'belum dibeli',
+      'belum terbeli',
+      '☐',
+      '',
+      'tidak',
+      'no',
+      'false',
+      '0',
+    }.contains(normalized)) {
       return false;
     }
     return null;
+  }
+
+  Uint8List _addStatusDropdown(Uint8List bytes, int itemCount) {
+    if (itemCount == 0) return bytes;
+    final archive = ZipDecoder().decodeBytes(bytes);
+    const worksheetPath = 'xl/worksheets/sheet1.xml';
+    ArchiveFile? worksheetFile;
+    for (final file in archive.files) {
+      if (file.name == worksheetPath) {
+        worksheetFile = file;
+        break;
+      }
+    }
+    if (worksheetFile == null) {
+      throw StateError('Sheet daftar belanja tidak ditemukan.');
+    }
+    final document = XmlDocument.parse(utf8.decode(worksheetFile.readBytes()!));
+    final worksheet = document.rootElement;
+    final sheetDataIndex = worksheet.children.indexWhere(
+      (node) => node is XmlElement && node.name.local == 'sheetData',
+    );
+    if (sheetDataIndex < 0) {
+      throw StateError('Isi sheet daftar belanja tidak ditemukan.');
+    }
+    final dropdown = XmlElement(
+      XmlName.parts('dataValidations'),
+      [XmlAttribute(XmlName.parts('count'), '1')],
+      [
+        XmlElement(
+          XmlName.parts('dataValidation'),
+          [
+            XmlAttribute(XmlName.parts('type'), 'list'),
+            XmlAttribute(XmlName.parts('allowBlank'), '1'),
+            XmlAttribute(XmlName.parts('showErrorMessage'), '1'),
+            XmlAttribute(
+              XmlName.parts('sqref'),
+              'A6:A${_firstItemRow + itemCount}',
+            ),
+            XmlAttribute(XmlName.parts('promptTitle'), 'Checklist'),
+            XmlAttribute(
+              XmlName.parts('prompt'),
+              'Pilih Belum dibeli atau Terbeli.',
+            ),
+            XmlAttribute(XmlName.parts('errorTitle'), 'Status tidak valid'),
+            XmlAttribute(
+              XmlName.parts('error'),
+              'Pilih salah satu status dari daftar.',
+            ),
+          ],
+          [
+            XmlElement(XmlName.parts('formula1'), [], [
+              XmlText('"Belum dibeli,Terbeli"'),
+            ]),
+          ],
+        ),
+      ],
+    );
+    worksheet.children.insert(sheetDataIndex + 1, dropdown);
+
+    final result = Archive();
+    for (final file in archive.files) {
+      result.addFile(
+        file.name == worksheetPath
+            ? ArchiveFile.string(worksheetPath, document.toXmlString())
+            : file,
+      );
+    }
+    final encoded = ZipEncoder().encode(result);
+    if (encoded.isEmpty) throw StateError('File Excel tidak dapat dibuat.');
+    return Uint8List.fromList(encoded);
   }
 
   bool _statusValue(String value) =>
