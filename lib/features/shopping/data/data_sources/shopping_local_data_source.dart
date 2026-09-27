@@ -124,6 +124,29 @@ class ShoppingLocalDataSource {
     return updated;
   }
 
+  Future<int> updateRequest({
+    required String id,
+    required String buyerName,
+    required int quantity,
+    required String note,
+    required DateTime updatedAt,
+  }) async {
+    final updated = await _database.customUpdate(
+      '''UPDATE shopping_requests
+      SET buyer_name = ?, quantity = ?, note = ?, updated_at = ?
+      WHERE id = ?''',
+      variables: [
+        Variable<String>(buyerName),
+        Variable<int>(quantity),
+        Variable<String>(note),
+        Variable<String>(updatedAt.toIso8601String()),
+        Variable<String>(id),
+      ],
+    );
+    if (updated > 0) _changes.add(null);
+    return updated;
+  }
+
   Future<int> updatePurchaseStatusForProduct(
     String tripId,
     String productId,

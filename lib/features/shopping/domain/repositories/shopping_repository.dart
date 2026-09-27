@@ -6,6 +6,7 @@ abstract interface class ShoppingRepository {
   Stream<Map<String, ShoppingProgress>> watchProgress(String tripId);
   Future<List<String>> getBuyerNames(String tripId);
   Future<String> addRequest(NewShoppingRequest request);
+  Future<void> updateRequest(ShoppingRequest request);
   Future<void> setPurchased(String requestId, bool isPurchased);
   Future<void> setPurchasedForProduct(
     String tripId,

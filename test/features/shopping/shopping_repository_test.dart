@@ -98,4 +98,39 @@ void main() {
     final requests = await repository.watchRequests('product-1').first;
     expect(requests.every((request) => request.isPurchased), isTrue);
   });
+
+  test('memperbarui data pembeli tanpa mengubah status pembelian', () async {
+    final requestId = await repository.addRequest(
+      const NewShoppingRequest(
+        tripId: 'trip-1',
+        productId: 'product-1',
+        buyerName: 'Rina',
+        quantity: 1,
+        note: 'Ukuran M',
+      ),
+    );
+    await repository.setPurchased(requestId, true);
+    final request = (await repository.watchRequests('product-1').first).single;
+
+    await repository.updateRequest(
+      ShoppingRequest(
+        id: request.id,
+        tripId: request.tripId,
+        productId: request.productId,
+        buyerName: 'Rina Putri',
+        quantity: 3,
+        note: 'Ukuran L',
+        isPurchased: request.isPurchased,
+        purchasedAt: request.purchasedAt,
+        createdAt: request.createdAt,
+        updatedAt: request.updatedAt,
+      ),
+    );
+
+    final updated = (await repository.watchRequests('product-1').first).single;
+    expect(updated.buyerName, 'Rina Putri');
+    expect(updated.quantity, 3);
+    expect(updated.note, 'Ukuran L');
+    expect(updated.isPurchased, isTrue);
+  });
 }

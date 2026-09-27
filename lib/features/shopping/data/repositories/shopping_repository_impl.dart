@@ -67,6 +67,18 @@ class ShoppingRepositoryImpl implements ShoppingRepository {
   }
 
   @override
+  Future<void> updateRequest(ShoppingRequest request) async {
+    final updated = await _localDataSource.updateRequest(
+      id: request.id,
+      buyerName: request.buyerName,
+      quantity: request.quantity,
+      note: request.note,
+      updatedAt: DateTime.now(),
+    );
+    if (updated == 0) throw StateError('Permintaan pembelian tidak ditemukan.');
+  }
+
+  @override
   Future<void> setPurchased(String requestId, bool isPurchased) async {
     final updated = await _localDataSource.updatePurchaseStatus(
       requestId,

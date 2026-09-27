@@ -466,7 +466,10 @@ class _ShoppingRequestsSection extends StatelessWidget {
                   )
                 else if (state.requests.isNotEmpty)
                   ...state.requests.map(
-                    (request) => _ShoppingRequestTile(request: request),
+                    (request) => _ShoppingRequestTile(
+                      request: request,
+                      trip: trip,
+                    ),
                   ),
               ],
             ),
@@ -502,12 +505,14 @@ class _ShoppingRequestsSection extends StatelessWidget {
       );
     }
   }
+
 }
 
 class _ShoppingRequestTile extends StatelessWidget {
-  const _ShoppingRequestTile({required this.request});
+  const _ShoppingRequestTile({required this.request, required this.trip});
 
   final ShoppingRequest request;
+  final Trip trip;
 
   @override
   Widget build(BuildContext context) {
@@ -535,12 +540,59 @@ class _ShoppingRequestTile extends StatelessWidget {
       subtitle: Text(
         '${request.quantity} pcs${request.note.isEmpty ? '' : ' · ${request.note}'}',
       ),
-      trailing: IconButton(
-        tooltip: 'Hapus pembeli',
-        onPressed: () => _confirmDelete(context, request),
-        icon: const Icon(Icons.delete_outline),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Edit pembeli',
+            onPressed: isMutating
+                ? null
+                : () => _showEditBuyerSheet(context, trip, request),
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          IconButton(
+            tooltip: 'Hapus pembeli',
+            onPressed: isMutating ? null : () => _confirmDelete(context, request),
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _showEditBuyerSheet(
+    BuildContext context,
+    Trip trip,
+    ShoppingRequest request,
+  ) async {
+    final requestsCubit = context.read<ShoppingRequestsCubit>();
+    List<String> buyerNames = const [];
+    try {
+      buyerNames = await context.read<ShoppingRepository>().getBuyerNames(
+        trip.id,
+      );
+    } catch (_) {
+      // Nama tersimpan hanya bantuan input; formulir tetap dapat dipakai.
+    }
+    if (!context.mounted) return;
+    final updated = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => BlocProvider.value(
+        value: requestsCubit,
+        child: _AddBuyerSheet(
+          trip: trip,
+          buyerNames: buyerNames,
+          request: request,
+        ),
+      ),
+    );
+    if (updated == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data pembeli diperbarui.')),
+      );
+    }
   }
 
   Future<void> _confirmDelete(
@@ -572,10 +624,15 @@ class _ShoppingRequestTile extends StatelessWidget {
 }
 
 class _AddBuyerSheet extends StatefulWidget {
-  const _AddBuyerSheet({required this.trip, required this.buyerNames});
+  const _AddBuyerSheet({
+    required this.trip,
+    required this.buyerNames,
+    this.request,
+  });
 
   final Trip trip;
   final List<String> buyerNames;
+  final ShoppingRequest? request;
 
   @override
   State<_AddBuyerSheet> createState() => _AddBuyerSheetState();
@@ -587,6 +644,18 @@ class _AddBuyerSheetState extends State<_AddBuyerSheet> {
   final _quantityController = TextEditingController(text: '1');
   final _noteController = TextEditingController();
   bool _saving = false;
+
+  bool get _isEditing => widget.request != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final request = widget.request;
+    if (request == null) return;
+    _nameController.text = request.buyerName;
+    _quantityController.text = request.quantity.toString();
+    _noteController.text = request.note;
+  }
 
   @override
   void dispose() {
@@ -608,7 +677,7 @@ class _AddBuyerSheetState extends State<_AddBuyerSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Tambah pembeli',
+                _isEditing ? 'Edit pembeli' : 'Tambah pembeli',
                 style: Theme.of(context).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -682,7 +751,7 @@ class _AddBuyerSheetState extends State<_AddBuyerSheet> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Simpan pembeli'),
+                    : Text(_isEditing ? 'Simpan perubahan' : 'Simpan pembeli'),
               ),
             ],
           ),
@@ -695,14 +764,22 @@ class _AddBuyerSheetState extends State<_AddBuyerSheet> {
     if (!_formKey.currentState!.validate()) return;
     final quantity = int.parse(_quantityController.text.trim());
     setState(() => _saving = true);
-    final added = await context.read<ShoppingRequestsCubit>().addRequest(
-      tripId: widget.trip.id,
-      buyerName: _nameController.text,
-      quantity: quantity,
-      note: _noteController.text,
-    );
+    final cubit = context.read<ShoppingRequestsCubit>();
+    final saved = _isEditing
+        ? await cubit.updateRequest(
+            request: widget.request!,
+            buyerName: _nameController.text,
+            quantity: quantity,
+            note: _noteController.text,
+          )
+        : await cubit.addRequest(
+            tripId: widget.trip.id,
+            buyerName: _nameController.text,
+            quantity: quantity,
+            note: _noteController.text,
+          );
     if (!mounted) return;
-    if (added) {
+    if (saved) {
       Navigator.of(context).pop(true);
     } else {
       setState(() => _saving = false);

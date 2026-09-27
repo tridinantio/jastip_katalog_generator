@@ -96,6 +96,44 @@ class ShoppingRequestsCubit extends Cubit<ShoppingRequestsState> {
     }
   }
 
+  Future<bool> updateRequest({
+    required ShoppingRequest request,
+    required String buyerName,
+    required int quantity,
+    required String note,
+  }) async {
+    final normalizedName = buyerName.trim();
+    if (normalizedName.isEmpty || quantity <= 0) return false;
+    if (state.mutatingRequestId != null) return false;
+    emit(state.copyWith(mutatingRequestId: request.id, clearMessage: true));
+    try {
+      await _repository.updateRequest(
+        ShoppingRequest(
+          id: request.id,
+          tripId: request.tripId,
+          productId: request.productId,
+          buyerName: normalizedName,
+          quantity: quantity,
+          note: note.trim(),
+          isPurchased: request.isPurchased,
+          purchasedAt: request.purchasedAt,
+          createdAt: request.createdAt,
+          updatedAt: request.updatedAt,
+        ),
+      );
+      emit(state.copyWith(clearMutatingRequest: true));
+      return true;
+    } catch (error) {
+      emit(
+        state.copyWith(
+          clearMutatingRequest: true,
+          message: 'Data pembeli gagal diubah: $error',
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<void> setPurchased(ShoppingRequest request, bool value) async {
     if (state.mutatingRequestId != null) return;
     emit(state.copyWith(mutatingRequestId: request.id, clearMessage: true));
