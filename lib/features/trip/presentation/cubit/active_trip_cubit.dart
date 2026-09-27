@@ -99,7 +99,9 @@ class ActiveTripCubit extends Cubit<ActiveTripState> {
     emit(
       state.copyWith(status: ActiveTripStatus.ready, trip: trip, trips: trips),
     );
-    if (!trip.hasRate || _needsRefresh(trip)) {
+    // Kurs dikunci saat trip dibuat. Trip tanpa kurs hanya dapat terjadi pada
+    // trip default/legacy yang baru dibuat, sehingga perlu diinisialisasi sekali.
+    if (!trip.hasRate) {
       await refreshRate();
     }
   }
@@ -162,7 +164,7 @@ class ActiveTripCubit extends Cubit<ActiveTripState> {
       await _tripRepository.setActiveTrip(id);
       final trip = await _tripRepository.getActiveTrip();
       emit(state.copyWith(trip: trip, isManagingTrips: false));
-      if (!trip.hasRate || _needsRefresh(trip)) await refreshRate();
+      if (!trip.hasRate) await refreshRate();
     } catch (error) {
       emit(state.copyWith(isManagingTrips: false, message: error.toString()));
     }
@@ -176,7 +178,7 @@ class ActiveTripCubit extends Cubit<ActiveTripState> {
       final trip = await _tripRepository.getActiveTrip();
       final trips = await _tripRepository.getTrips();
       emit(state.copyWith(trip: trip, trips: trips, isManagingTrips: false));
-      if (!trip.hasRate || _needsRefresh(trip)) await refreshRate();
+      if (!trip.hasRate) await refreshRate();
       return true;
     } catch (error) {
       emit(state.copyWith(isManagingTrips: false, message: error.toString()));
@@ -282,12 +284,6 @@ class ActiveTripCubit extends Cubit<ActiveTripState> {
       );
       return false;
     }
-  }
-
-  bool _needsRefresh(Trip trip) {
-    final fetched = trip.rateFetchedAt;
-    if (fetched == null) return true;
-    return DateTime.now().difference(fetched) > const Duration(hours: 12);
   }
 
   @override

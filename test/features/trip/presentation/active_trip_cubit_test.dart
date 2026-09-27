@@ -4,6 +4,22 @@ import 'package:jastip_katalog_generator/features/trip/domain/repositories/trip_
 import 'package:jastip_katalog_generator/features/trip/presentation/cubit/active_trip_cubit.dart';
 
 void main() {
+  test('membuka trip yang sudah memiliki kurs tidak memperbarui kurs otomatis',
+      () async {
+    final tripRepository = _MemoryTripRepository(
+      rateFetchedAt: DateTime(2026, 1, 1),
+    );
+    final exchangeRepository = _FakeExchangeRateRepository();
+    final cubit = ActiveTripCubit(tripRepository, exchangeRepository);
+    addTearDown(cubit.close);
+
+    await cubit.initialize();
+
+    expect(exchangeRepository.requestedCodes, isEmpty);
+    expect(cubit.state.trip?.rateMicros, 110000000);
+    expect(cubit.state.trip?.rateFetchedAt, DateTime(2026, 1, 1));
+  });
+
   test(
     'refresh kurs memperbarui trip di state agar kartu kurs tidak stale',
     () async {
@@ -59,7 +75,8 @@ void main() {
 }
 
 class _MemoryTripRepository implements TripRepository {
-  Trip trip = Trip(
+  _MemoryTripRepository({DateTime? rateFetchedAt})
+    : trip = Trip(
     id: 'trip-1',
     name: 'Japan Trip',
     country: 'Jepang',
@@ -68,11 +85,13 @@ class _MemoryTripRepository implements TripRepository {
     currencySymbol: '¥',
     rateMicros: 110000000,
     rateDate: DateTime(2026, 9, 8),
-    rateFetchedAt: DateTime.now(),
+    rateFetchedAt: rateFetchedAt ?? DateTime.now(),
     markupBasisPoints: 1500,
     fixedFeeIdr: 0,
     roundingUnitIdr: 1000,
   );
+
+  Trip trip;
 
   @override
   Future<Trip> createTrip(NewTrip trip) => throw UnimplementedError();
