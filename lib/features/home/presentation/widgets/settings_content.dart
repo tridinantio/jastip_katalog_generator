@@ -86,10 +86,15 @@ class _SettingsContentState extends State<SettingsContent> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               children: [
-                const AtelierHeading(
+                AtelierHeading(
                   eyebrow: 'MAKE IT YOURS',
                   title: 'Pengaturan',
                   subtitle: 'Atur perjalanan, harga, dan ruang kerja Anda.',
+                  trailing: IconButton(
+                    tooltip: 'Lihat changelog aplikasi',
+                    onPressed: () => _showChangelog(context),
+                    icon: const Icon(Icons.info_outline),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 _TripManagerCard(
@@ -269,6 +274,14 @@ class _SettingsContentState extends State<SettingsContent> {
     await cubit.restore(candidate);
   }
 
+  Future<void> _showChangelog(BuildContext context) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => const _ChangelogSheet(),
+      );
+
   int _roundingUnit = 1000;
 
   void _initializeControllers(Trip trip) {
@@ -427,6 +440,104 @@ class _SettingsContentState extends State<SettingsContent> {
       await context.read<ActiveTripCubit>().refreshRate();
     }
   }
+}
+
+class _ChangelogSheet extends StatelessWidget {
+  const _ChangelogSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 0, 20, bottomInset + 24),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Changelog',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Perubahan terbaru di Jastip Katalog',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const _ChangelogEntry(
+                version: 'Versi 1.0.0',
+                date: '27 September 2026',
+                changes: [
+                  'Data pembeli pada detail produk kini dapat diedit.',
+                  'Kurs trip dikunci saat dibuat dan hanya berubah melalui tindakan Perbarui kurs.',
+                  'Rekap pembeli menampilkan total titipan dan status pembelian.',
+                  'Backup, restore, dan export Excel tersedia untuk data trip.',
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChangelogEntry extends StatelessWidget {
+  const _ChangelogEntry({
+    required this.version,
+    required this.date,
+    required this.changes,
+  });
+
+  final String version;
+  final String date;
+  final List<String> changes;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(version, style: const TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 2),
+        Text(
+          date,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...changes.map(
+          (change) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 7),
+                  child: Icon(Icons.circle, size: 6),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(change)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _TripManagerCard extends StatelessWidget {
