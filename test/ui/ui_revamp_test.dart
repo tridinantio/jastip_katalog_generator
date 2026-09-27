@@ -52,7 +52,7 @@ void main() {
         final boundaryKey = GlobalKey();
         await tester.pumpWidget(_app(fixtures!, boundaryKey, scenario.scale));
         await tester.pumpAndSettle();
-        expect(find.text('Pergi. Temukan. Titip.'), findsOneWidget);
+        expect(find.text('Aku Jalan, Kamu Titip'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await _snapshot(tester, boundaryKey, '${scenario.name}-trip');
 
@@ -106,10 +106,55 @@ void main() {
         expect(find.text('Sudah termasuk jasa titip'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await _snapshot(tester, boundaryKey, '${scenario.name}-catalog');
+        if (scenario.name == 'phone') {
+          await tester.scrollUntilVisible(
+            find.text('Checklist pembeli').hitTestable(),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await _snapshot(tester, boundaryKey, 'phone-checklist');
+          await tester.tap(find.text('Tambah').hitTestable());
+          await tester.pumpAndSettle();
+          await _snapshot(tester, boundaryKey, 'phone-add-buyer');
+          tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+          await tester.pumpAndSettle();
+          await tester.tap(find.byTooltip('Edit pembeli').first);
+          await tester.pumpAndSettle();
+          await _snapshot(tester, boundaryKey, 'phone-edit-buyer');
+          tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+          await tester.pumpAndSettle();
+        }
         await tester.pageBack();
         await tester.pumpAndSettle();
         await tab('Pengaturan');
         await _snapshot(tester, boundaryKey, '${scenario.name}-settings');
+        if (scenario.name == 'phone') {
+          await tester.tap(find.byTooltip('Lihat changelog aplikasi'));
+          await tester.pumpAndSettle();
+          await _snapshot(tester, boundaryKey, 'phone-changelog');
+          tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Panduan Pengguna').hitTestable());
+          await tester.pumpAndSettle();
+          expect(find.text('Mulai cepat'), findsOneWidget);
+          expect(find.byType(Image), findsWidgets);
+          expect(tester.takeException(), isNull);
+          await _snapshot(tester, boundaryKey, 'phone-guide');
+          await tester.pageBack();
+          await tester.pumpAndSettle();
+          expect(find.text('Tambah trip'), findsOneWidget);
+          await tester.tap(find.text('Tambah trip'));
+          await tester.pumpAndSettle();
+          await _snapshot(tester, boundaryKey, 'phone-create-trip');
+          await tester.tap(find.text('Batal'));
+          await tester.pumpAndSettle();
+          await tester.scrollUntilVisible(
+            find.byTooltip('Perbarui kurs').hitTestable(),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await _snapshot(tester, boundaryKey, 'phone-rate-settings');
+        }
         await tab('Trip');
         await tester.scrollUntilVisible(
           find.text('Tambah produk').hitTestable(),
@@ -122,6 +167,14 @@ void main() {
         expect(find.text('Galeri'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await _snapshot(tester, boundaryKey, '${scenario.name}-form');
+        if (scenario.name == 'phone') {
+          await tester.scrollUntilVisible(
+            find.text('Di mana produk ini ditemukan?').hitTestable(),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await _snapshot(tester, boundaryKey, 'phone-form-details');
+        }
         await tester.pumpWidget(const SizedBox());
         await tester.pumpAndSettle();
       },

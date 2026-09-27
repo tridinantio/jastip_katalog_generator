@@ -1,5 +1,7 @@
 # Jastip Katalog
 
+Panduan pemakaian aplikasi: [PANDUAN_PENGGUNA.md](PANDUAN_PENGGUNA.md).
+
 Aplikasi Flutter offline-first untuk mencatat produk jastip, menghitung harga
 dengan kurs online, dan membuat gambar katalog siap simpan atau bagikan.
 

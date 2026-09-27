@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/formatters/app_formatters.dart';
 import '../../../../core/widgets/atelier_widgets.dart';
+import '../pages/user_guide_page.dart';
 import '../../../backup/presentation/cubit/backup_restore_cubit.dart';
 import '../../../trip/domain/entities/trip.dart';
 import '../../../trip/presentation/cubit/active_trip_cubit.dart';
@@ -97,6 +98,19 @@ class _SettingsContentState extends State<SettingsContent> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const UserGuidePage(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.menu_book_outlined),
+                  label: const Text('Panduan Pengguna'),
+                  style: OutlinedButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                  ),
+                ),
+                const SizedBox(height: 16),
                 _TripManagerCard(
                   state: state,
                   onCreate: () => _showCreateTrip(context, state),
@@ -458,9 +472,8 @@ class _ChangelogSheet extends StatelessWidget {
             children: [
               Text(
                 'Changelog',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
@@ -474,6 +487,7 @@ class _ChangelogSheet extends StatelessWidget {
                 version: 'Versi 1.0.0',
                 date: '27 September 2026',
                 changes: [
+                  'Panduan pengguna lengkap dengan screenshot kini tersedia langsung di aplikasi.',
                   'Data pembeli pada detail produk kini dapat diedit.',
                   'Kurs trip dikunci saat dibuat dan hanya berubah melalui tindakan Perbarui kurs.',
                   'Rekap pembeli menampilkan total titipan dan status pembelian.',
@@ -514,9 +528,8 @@ class _ChangelogEntry extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           date,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
         ...changes.map(
